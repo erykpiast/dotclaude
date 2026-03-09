@@ -1,6 +1,6 @@
 # dotclaude
 
-My [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configuration, .
+My [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configuration.
 
 ## What's inside
 
