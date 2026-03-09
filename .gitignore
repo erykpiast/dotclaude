@@ -1,0 +1,15 @@
+telemetry/
+debug/
+cache/
+file-history/
+paste-cache/
+shell-snapshots/
+session-env/
+backups/
+plans/
+tasks/
+projects/
+plugins/
+history.jsonl
+policy-limits.json
+*.local.json
