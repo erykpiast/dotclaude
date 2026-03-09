@@ -7,10 +7,12 @@ My [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configuration, 
 The base for my configuration is [ClaudeKit](https://github.com/carlrannaberg/claudekit).
 
 - **`agents/`** — 25 domain expert subagents (TypeScript, React, PostgreSQL, Docker, accessibility, and more). Installed via [ClaudeKit](https://github.com/carlrannaberg/claudekit).
-- **`commands/`** — 23 slash commands for git workflows, specs, code review, research, and more. Installed via [ClaudeKit](https://github.com/carlrannaberg/claudekit).
+- **`commands/`** — 24 slash commands for git workflows, specs, code review, research, and more. Most installed via [ClaudeKit](https://github.com/carlrannaberg/claudekit); `/learn` is a custom addition.
 
 On top of that I have:
 
+- **`hooks/`** — Git-aware Stop hook that reminds Claude to capture learnings after substantive work.
+- **`templates/`** — Project template for `docs/learnings.md` — a structured log of debugging insights and development patterns.
 - **`skills/ship/`** — Custom skill that guides branch naming, commit messages, and PR creation through a structured interactive workflow.
 
 The general configuration:
