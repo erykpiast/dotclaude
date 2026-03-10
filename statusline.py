@@ -2,6 +2,7 @@
 """Claude Code status line: sparkline charts for context usage, input tokens, output tokens."""
 
 import json
+import math
 import os
 import sys
 
@@ -124,11 +125,24 @@ def main():
 
     # Y-axis labels
     pct_labels = ["100", "75", "50", "25"]
-    # Scale Y-axis so highest value sits at ~67% height (33% headroom)
+
+    def nice_max(raw_max):
+        """Round up to a nice number divisible by 4, with headroom above raw_max."""
+        if raw_max <= 0:
+            return 4
+        target = raw_max * 1.33  # ~33% headroom
+        # Find smallest 4*step >= target where step is 1,2,5 * 10^n
+        mag = 10 ** math.floor(math.log10(target / 4))
+        for ns in (1, 2, 5, 10):
+            step = ns * mag
+            if 4 * step >= target:
+                return int(4 * step)
+        return int(4 * 10 * mag)
+
     raw_max_in = max(in_data) if in_data else 1
     raw_max_out = max(out_data) if out_data else 1
-    max_in = max(raw_max_in / 0.67, 1)
-    max_out = max(raw_max_out / 0.67, 1)
+    max_in = nice_max(raw_max_in)
+    max_out = nice_max(raw_max_out)
 
     def make_token_labels(mx):
         labels = []
