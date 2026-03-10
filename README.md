@@ -12,6 +12,7 @@ The base for my configuration is [ClaudeKit](https://github.com/carlrannaberg/cl
 On top of that I have:
 
 - **`statusline.py`** — Custom status line rendering three sparkline charts (context window %, input tokens, output tokens) with color-coded bars, y-axis labels, and a turn counter.
+  <img width="1510" height="278" alt="CleanShot 2026-03-10 at 18 00 26@2x" src="https://github.com/user-attachments/assets/60a9c14f-517d-49e6-8df6-0c128d7960e0" />
 - **`hooks/`** — Git-aware Stop hook that reminds Claude to capture learnings after substantive work.
 - **`templates/`** — Project template for `docs/learnings.md` — a structured log of debugging insights and development patterns.
 - **`skills/ship/`** — Custom skill that guides branch naming, commit messages, and PR creation through a structured interactive workflow.
