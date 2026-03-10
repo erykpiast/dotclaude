@@ -11,13 +11,14 @@ The base for my configuration is [ClaudeKit](https://github.com/carlrannaberg/cl
 
 On top of that I have:
 
+- **`statusline.py`** — Custom status line rendering three sparkline charts (context window %, input tokens, output tokens) with color-coded bars, y-axis labels, and a turn counter.
 - **`hooks/`** — Git-aware Stop hook that reminds Claude to capture learnings after substantive work.
 - **`templates/`** — Project template for `docs/learnings.md` — a structured log of debugging insights and development patterns.
 - **`skills/ship/`** — Custom skill that guides branch naming, commit messages, and PR creation through a structured interactive workflow.
 
 The general configuration:
 
-- **`settings.json`** — Global Claude Code settings (dangerous mode prompt skip, Swift LSP plugin enabled).
+- **`settings.json`** — Global Claude Code settings (dangerous mode prompt skip, Swift LSP plugin enabled, status line command).
 
 ## Install ClaudeKit
 
