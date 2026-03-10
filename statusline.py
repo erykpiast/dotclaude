@@ -160,8 +160,9 @@ def main():
     out_lw = label_width(out_labels)
 
     # Turn counter gap
-    turns_label = str(len(history))
-    turns_margin = 4
+    turns_count = str(len(history))
+    turns_label = f"↻{turns_count}"
+    turns_margin = 4 - len(turns_count)  # 3 spaces for 1 digit, 2 for 2, 1 for 3
     left_gap = len(turns_label) + turns_margin
 
     # Terminal width and chart sizing
