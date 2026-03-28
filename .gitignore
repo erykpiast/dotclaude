@@ -10,6 +10,8 @@ plans/
 tasks/
 projects/
 plugins/
+sessions/
 history.jsonl
 policy-limits.json
 *.local.json
+mcp-needs-auth-cache.json
