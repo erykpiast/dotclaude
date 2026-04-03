@@ -1,11 +1,12 @@
 {
-  "skipDangerousModePermissionPrompt": true,
-  "enabledPlugins": {
-    "swift-lsp@claude-plugins-official": true
-  },
   "statusLine": {
     "type": "command",
     "command": "python3 ~/.claude/statusline.py",
     "padding": 6
-  }
+  },
+  "enabledPlugins": {
+    "swift-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
+  },
+  "skipDangerousModePermissionPrompt": true
 }
