@@ -1,6 +1,6 @@
 ---
-allowed-tools: Task, Read, Grep
-description: Analyzes a specification document to determine if it has enough detail for autonomous implementation
+allowed-tools: Task, Read, Grep, Agent, WebFetch, WebSearch, Glob
+description: Analyzes a specification document for completeness, coherence, and reference accuracy before autonomous implementation
 category: validation
 argument-hint: "<path-to-spec-file>"
 ---
@@ -69,6 +69,40 @@ The analysis evaluates three fundamental aspects, each with specific criteria:
   - Edge case coverage and failure scenarios
   - Follows project testing philosophy: "When tests fail, fix the code, not the test"
 - Deployment considerations
+
+### Reference Link Validation (MANDATORY)
+
+Before any other analysis, extract and validate **every** link and reference in the spec. This catches specs built on fabricated or misunderstood sources.
+
+**Step 1 — Extract all references**
+Scan the spec for:
+- URLs (http/https links, including documentation links, API references, GitHub issues/PRs)
+- File path references (e.g., `src/utils/foo.ts`, `docs/architecture.md`)
+- References to specific functions, classes, config keys, CLI flags, or API endpoints
+
+**Step 2 — Verify existence**
+For each reference:
+- **URLs**: Use `WebFetch` to check the link resolves. If it returns a 404 or error, flag it as **broken**.
+- **File paths**: Use `Glob`/`Read` to confirm the file exists in the project.
+- **Code references** (functions, classes, flags): Use `Grep` to verify they exist in the codebase.
+- **Documentation references**: Fetch or read the referenced doc and confirm it exists.
+
+**Step 3 — Verify content alignment**
+For each reference that exists, read/fetch its content and check:
+- Does the referenced content **support** the spec's claims? (e.g., if the spec says "as documented in [link], the API supports X" — does the doc actually say that?)
+- Does the referenced content **contradict** the spec's proposed approach? (e.g., the linked doc recommends approach A, but the spec chose approach B without justification)
+- Does the referenced content describe **limitations or constraints** that the spec ignores?
+- Are there **alternatives documented** in the reference that the spec dismissed without adequate justification?
+
+**Step 4 — Report findings**
+Produce a **Reference Validation Report** section in the output:
+- **Broken links**: References that don't resolve or point to non-existent files/code
+- **Content mismatches**: References whose content contradicts the spec
+- **Unsupported claims**: Spec claims attributed to a reference that the reference doesn't actually make
+- **Missed guidance**: Important guidance in referenced docs that the spec ignores
+- **Validated references**: References confirmed to exist and align with the spec
+
+> **CRITICAL**: Any broken link or content mismatch is a **Critical Gap** that blocks implementation readiness. A spec that cites non-existent documentation or misrepresents referenced material cannot be trusted.
 
 ### Additional Quality Checks:
 
@@ -144,6 +178,7 @@ Be aggressive about cutting features:
 
 The analysis will provide:
 - **Summary**: Overall readiness assessment (Ready/Not Ready)
+- **Reference Validation**: Broken links, content mismatches, unsupported claims, missed guidance
 - **Critical Gaps**: Must-fix issues blocking implementation
 - **Missing Details**: Specific areas needing clarification
 - **Risk Areas**: Potential implementation challenges
