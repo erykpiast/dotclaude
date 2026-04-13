@@ -50,6 +50,10 @@ Always creates **draft PRs**. Commit messages follow conventional commits.
 
 When CI fails on a PR, `/fix:ci` fetches the error logs, identifies the root cause, applies fixes, and amends the responsible commit. Uses `--force-with-lease` to push the updated history. If the failure is flaky or environment-related (missing secrets, base drift), it reports to you instead of guessing.
 
+### `/learn`
+
+Reviews the current session for non-obvious insights worth preserving — surprising framework behaviors, failed approaches, debugging dead ends, or user corrections. Captures them in `docs/learnings.md` so future sessions don't repeat the same mistakes. A Stop hook also reminds Claude to consider running this after substantive work.
+
 ### `/merge`
 
 Resolves merge conflicts automatically. For each conflicted file, it analyzes both sides using git history and context, produces the correct merged result, and stages it. Runs sanity checks (type errors, tests) after resolving. Stops and asks only when a conflict is genuinely ambiguous — competing business logic with no clear winner.
