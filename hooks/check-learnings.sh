@@ -1,5 +1,5 @@
 #!/bin/bash
-# Stop hook: remind Claude to consider updating learnings after substantive work.
+# Stop hook: remind to run /reflect after substantive work.
 # Only triggers when there are uncommitted changes (i.e., work was done).
 
 if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/null; then
@@ -7,4 +7,16 @@ if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/nu
   exit 0
 fi
 
-echo "If this session involved debugging a non-obvious issue, a surprising framework behavior, a failed approach that was later corrected, a UX/design correction from the user, or a refactoring request on code you produced, consider running /learn to capture the insight in docs/learnings.md."
+# Count changed files for context
+changed=$(git diff --stat HEAD 2>/dev/null | tail -1)
+
+# Check if memory was already updated this session
+memory_note=""
+if [ -d ".claude/memory" ]; then
+  recent=$(find .claude/memory -name "*.md" -newer .claude/memory/index.md 2>/dev/null | head -1)
+  if [ -n "$recent" ]; then
+    memory_note=" Memory was updated this session."
+  fi
+fi
+
+echo "Session summary: ${changed}.${memory_note} Run /reflect to review this session for insights worth remembering."
