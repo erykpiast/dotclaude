@@ -5,12 +5,14 @@ file-history/
 paste-cache/
 shell-snapshots/
 session-env/
+scheduled-tasks/
 backups/
 plans/
 tasks/
 projects/
 plugins/
 sessions/
+.claude/
 history.jsonl
 policy-limits.json
 *.local.json
