@@ -16,6 +16,7 @@ On top of that I have:
 - **`hooks/`** — Git-aware Stop hook that reminds Claude to capture learnings after substantive work.
 - **`templates/`** — Project template for `docs/learnings.md` — a structured log of debugging insights and development patterns.
 - **`skills/ship/`** — Custom skill that guides branch naming, commit messages, and PR creation through a structured interactive workflow.
+- **`skills/no-fluff/`** — Concise communication mode that drops filler and hedging while keeping proper grammar. Inspired by [caveman](https://github.com/JuliusBrussee/caveman) (lite mode). Auto-activates on session start via hook.
 
 The general configuration:
 
