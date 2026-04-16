@@ -1,6 +1,17 @@
 {
   "model": "opus[1m]",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat ~/.claude/skills/no-fluff/SKILL.md"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "*",
