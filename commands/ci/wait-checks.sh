@@ -23,12 +23,17 @@ i=0
 while [ "$i" -lt "$max_iters" ]; do
   i=$((i + 1))
 
-  out=$(gh pr checks --json name,bucket,link,state 2>/dev/null) || {
-    echo "gh pr checks failed"
-    exit 2
-  }
-
-  total_all=$(echo "$out" | jq 'length')
+  # `gh pr checks` exits non-zero with "no checks reported" when no workflow
+  # runs exist for the branch yet — that is the empty case, not an error. Parse
+  # the output as JSON; if it does not parse, treat it as an empty array and
+  # let the empty-grace counter decide whether to give up.
+  out=$(gh pr checks --json name,bucket,link,state 2>/dev/null)
+  if echo "$out" | jq -e . >/dev/null 2>&1; then
+    total_all=$(echo "$out" | jq 'length')
+  else
+    out='[]'
+    total_all=0
+  fi
   if [ "$total_all" -eq 0 ]; then
     if [ "$empty_grace" -gt 0 ]; then
       empty_grace=$((empty_grace - 1))
