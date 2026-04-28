@@ -36,6 +36,19 @@ while [ "$i" -lt "$max_iters" ]; do
       continue
     fi
     echo "No CI checks reported for this PR."
+    pr_state=$(gh pr view --json isDraft,mergeable,mergeStateStatus 2>/dev/null) || pr_state=""
+    if [ -n "$pr_state" ]; then
+      is_draft=$(echo "$pr_state" | jq -r '.isDraft')
+      mergeable=$(echo "$pr_state" | jq -r '.mergeable')
+      merge_status=$(echo "$pr_state" | jq -r '.mergeStateStatus')
+      if [ "$mergeable" = "CONFLICTING" ]; then
+        echo "Likely cause: branch has merge conflicts (required checks are gated on conflict resolution)."
+      elif [ "$is_draft" = "true" ]; then
+        echo "PR is a draft. If your CI is gated on non-draft state, mark it ready: gh pr ready"
+      else
+        echo "PR state: isDraft=$is_draft, mergeable=$mergeable, mergeStateStatus=$merge_status"
+      fi
+    fi
     exit 2
   fi
 
