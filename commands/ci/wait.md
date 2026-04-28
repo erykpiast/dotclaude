@@ -29,34 +29,17 @@ If this errors or returns nothing, report `No PR for the current branch.` and st
 
 ## Step 2 — Wait
 
-Both cases below MUST run with `run_in_background: true` so the user can keep using the conversation. After kicking off the background task, return control to the user with a short note (e.g. "Waiting for CI in the background — I'll report when it finishes."). Do not poll, sleep, or block; the runtime will notify you when the background task exits, and only then proceed to Step 3.
-
-### Case A — `$ARGUMENTS` is empty
-
-Run in background:
-
-```
-gh pr checks --watch --fail-fast --interval 30
-```
-
-Exit codes from `gh pr checks`:
-- `0` — all checks passed.
-- `1` — at least one check failed (or `--fail-fast` short-circuited).
-- `8` — still pending (shouldn't happen with `--watch`, but treat as inconclusive).
-
-When the background task completes, read its output. Then run `gh pr checks` once more (without `--watch`) to grab the final summary table for the report.
-
-### Case B — `$ARGUMENTS` is non-empty
-
-Run the polling helper in background:
+Run the polling helper in background (`run_in_background: true`) so the user can keep using the conversation. After kicking off the background task, return control to the user with a short note (e.g. "Waiting for CI in the background — I'll report when it finishes."). Do not poll, sleep, or block; the runtime will notify you when the background task exits, and only then proceed to Step 3.
 
 ```
 ~/.claude/commands/ci/wait-checks.sh "$ARGUMENTS"
 ```
 
-The script polls every 30s and prints a tab-separated `BUCKET<TAB>NAME<TAB>LINK` line per matching check on exit. Its exit codes:
-- `0` — all matching checks completed without failure.
-- `1` — at least one matching check failed or was cancelled.
+The script handles both modes uniformly: an empty `$ARGUMENTS` matches every check (every name contains the empty string), so all checks are tracked. Do **not** use `gh pr checks --watch` directly — it exits immediately when no checks have been registered yet, which is the common case right after a push.
+
+The script polls every 30s and prints a tab-separated `BUCKET<TAB>NAME<TAB>LINK` line per tracked check on exit. Its exit codes:
+- `0` — all tracked checks completed without failure.
+- `1` — at least one tracked check failed or was cancelled.
 - `2` — no checks reported on the PR after one grace poll, no checks matched the query, or `gh pr checks` failed.
 - `3` — timed out after 60 minutes; partial state is printed.
 

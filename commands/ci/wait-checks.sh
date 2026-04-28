@@ -16,7 +16,8 @@ set -u
 
 query=$(printf %s "${1:-}" | tr '[:upper:]' '[:lower:]')
 max_iters=120     # 60 minutes at 30s intervals
-empty_grace=1     # tolerate one empty poll before giving up
+empty_grace=4     # tolerate ~2 minutes of empty polls before giving up
+                  # (workflows can take a minute or two to register after push)
 i=0
 
 while [ "$i" -lt "$max_iters" ]; do
