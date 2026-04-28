@@ -1,6 +1,6 @@
 ---
 description: Wait for CI on the current PR to finish (all green, or first failure)
-allowed-tools: Bash(gh:*), Bash(git:*), Bash(jq:*), Bash(sleep:*), Bash(echo:*), Bash(bash:*), Bash(printf:*), Bash(tr:*)
+allowed-tools: Bash(gh:*), Bash(git:*), Bash(~/.claude/commands/ci/wait-checks.sh:*)
 category: workflow
 argument-hint: "[check name substring, e.g. tests | preview deployment]"
 ---
@@ -25,7 +25,7 @@ gh pr view --json number,headRefName,url 2>/dev/null
 
 If this errors or returns nothing, report `No PR for the current branch.` and stop.
 
-## Step 2 — Dispatch by argument
+## Step 2 — Wait
 
 CI runs can take >10 minutes, so always launch the wait command with `run_in_background: true` and let the runtime notify you when it exits. Then read the output and proceed.
 
@@ -46,59 +46,16 @@ When the background task completes, read its output. Then run `gh pr checks` onc
 
 ### Case B — `$ARGUMENTS` is non-empty
 
-Launch this script in the background. Pass the argument via the env var `WAIT_CI_QUERY` so quoting stays sane:
+Run the polling helper in background:
 
-```bash
-WAIT_CI_QUERY="$ARGUMENTS" bash -c '
-  q=$(printf %s "$WAIT_CI_QUERY" | tr "[:upper:]" "[:lower:]")
-  max_iters=120   # 60 minutes at 30s intervals
-  empty_grace=1   # tolerate one empty poll before giving up (CI may not have triggered yet)
-  i=0
-  while [ "$i" -lt "$max_iters" ]; do
-    i=$((i + 1))
-    out=$(gh pr checks --json name,bucket,link,state 2>/dev/null) || { echo "gh pr checks failed"; exit 2; }
-    total_all=$(echo "$out" | jq "length")
-    if [ "$total_all" -eq 0 ]; then
-      if [ "$empty_grace" -gt 0 ]; then
-        empty_grace=$((empty_grace - 1))
-        sleep 30
-        continue
-      fi
-      echo "No CI checks reported for this PR."
-      exit 2
-    fi
-    matches=$(echo "$out" | jq --arg q "$q" "[.[] | select(.name | ascii_downcase | contains(\$q))]")
-    total=$(echo "$matches" | jq "length")
-    if [ "$total" -eq 0 ]; then
-      echo "No checks match: $WAIT_CI_QUERY"
-      echo "Available checks:"
-      echo "$out" | jq -r ".[].name"
-      exit 2
-    fi
-    failed=$(echo "$matches" | jq "[.[] | select(.bucket == \"fail\" or .bucket == \"cancel\")] | length")
-    # Anything not in the known terminal set is treated as still pending,
-    # so unknown future bucket values do not silently exit 0.
-    pending=$(echo "$matches" | jq "[.[] | select(.bucket != \"pass\" and .bucket != \"fail\" and .bucket != \"cancel\" and .bucket != \"skipping\")] | length")
-    if [ "$failed" -gt 0 ]; then
-      echo "$matches" | jq -r ".[] | \"\(.bucket | ascii_upcase)\t\(.name)\t\(.link)\""
-      exit 1
-    fi
-    if [ "$pending" -eq 0 ]; then
-      echo "$matches" | jq -r ".[] | \"\(.bucket | ascii_upcase)\t\(.name)\t\(.link)\""
-      exit 0
-    fi
-    sleep 30
-  done
-  echo "Timed out after 60 minutes. Last state:"
-  echo "$matches" | jq -r ".[] | \"\(.bucket | ascii_upcase)\t\(.name)\t\(.link)\""
-  exit 3
-'
+```
+~/.claude/commands/ci/wait-checks.sh "$ARGUMENTS"
 ```
 
-Exit codes from the script:
+The script polls every 30s and prints a tab-separated `BUCKET<TAB>NAME<TAB>LINK` line per matching check on exit. Its exit codes:
 - `0` — all matching checks completed without failure.
 - `1` — at least one matching check failed or was cancelled.
-- `2` — no checks reported on the PR after one grace poll, no checks matched the query, or the `gh` call failed.
+- `2` — no checks reported on the PR after one grace poll, no checks matched the query, or `gh pr checks` failed.
 - `3` — timed out after 60 minutes; partial state is printed.
 
 ## Step 3 — Report
