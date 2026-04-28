@@ -9,6 +9,8 @@ argument-hint: "[check name substring, e.g. tests | preview deployment]"
 
 Block until CI on the current PR reaches a terminal state, then report.
 
+**Always launch the waiting command with `run_in_background: true`.** A foreground Bash call would freeze the conversation for the entire CI run; running in the background keeps the session interactive and the runtime will notify you when the process exits. This applies to both modes below — never run the wait in the foreground.
+
 Modes:
 - **No argument** — wait for the entire CI suite. Returns on either all-green or the first check failure.
 - **With argument** (`$ARGUMENTS`) — wait only for checks whose names contain the argument (case-insensitive substring). Returns when every matching check is done (pass or fail).
@@ -27,7 +29,7 @@ If this errors or returns nothing, report `No PR for the current branch.` and st
 
 ## Step 2 — Wait
 
-CI runs can take >10 minutes, so always launch the wait command with `run_in_background: true` and let the runtime notify you when it exits. Then read the output and proceed.
+Both cases below MUST run with `run_in_background: true` so the user can keep using the conversation. After kicking off the background task, return control to the user with a short note (e.g. "Waiting for CI in the background — I'll report when it finishes."). Do not poll, sleep, or block; the runtime will notify you when the background task exits, and only then proceed to Step 3.
 
 ### Case A — `$ARGUMENTS` is empty
 
