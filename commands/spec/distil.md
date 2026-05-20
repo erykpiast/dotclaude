@@ -17,10 +17,25 @@ The distilled spec is a **decision surface** — committed alongside code, it en
 
 Critically, the distilled spec must match the **actual implementation**, not the original plan. During implementation, follow-up prompts, testing feedback, and course corrections often change assumptions and decisions. The conversation history is the source of truth — the original spec is just the starting point.
 
+## Source-of-truth split
+
+The PR diff is authoritative for **what changed**. The distilled spec is authoritative for **why**.
+
+If the reviewer can read it off the diff, it does not belong in the distilled spec:
+- Function, method, type, file, route, and column names
+- Type signatures, result shapes, predicates (`x !== 'foo'`)
+- Log/event slug strings, status codes, error codes
+- Field counts ("six columns", "all four fields") — say "the X"
+- Implementation phases or step-by-step task breakdowns
+
+When tempted to name a symbol, replace it with the conceptual role it plays: `findOrCreateRecordForUser` → "the record resolver"; `AccountRepo.delete` → "delete the account row"; `/items/new` → "the item-creation form".
+
+Exception: a symbol is fine when it is the *subject* of a decision the reviewer is being asked to weigh in on, and naming it adds precision the prose cannot. Default to omitting.
+
 ## Process
 
 1. **Read** the input spec at `$ARGUMENTS`
-2. **Review the full conversation context** — scan all follow-up prompts, feedback, corrections, and implementation changes that happened after the original spec. The conversation is the ground truth for what was actually built.
+2. **Review the full conversation context** — scan all follow-up prompts, feedback, corrections, and implementation changes that happened after the original spec. The conversation is the ground truth for what was actually built. **Resolved questions disappear from the spec entirely** — they become a Decision (if the rationale matters) or vanish (if the answer is now obvious from the diff). Never leave a header called "Open questions" in a distilled spec; if a genuine unknown remains, attach it as one inline sentence to the Decision it qualifies.
 3. **Identify divergences** between the original spec and what was actually implemented. Categorize each:
    - **Trivial/mistake corrections** (typos in approach, obvious bugs caught during implementation) → omit from the distilled spec entirely, just reflect the final correct decision
    - **Meaningful pivots with clear rationale** (user explained why, or the reason is obvious from context) → document as a decision with the alternative framed naturally (see Decisions section below)
@@ -34,7 +49,7 @@ Critically, the distilled spec must match the **actual implementation**, not the
 Produce a markdown document with these sections. **Not every section is required** — aggressively skip sections that don't add value. The spec should be proportional to the complexity of the change. A tiny feature needs a tiny spec.
 
 **Always include:** Summary, Decisions, and Acceptance Criteria.
-**Include when they add value:** Motivation, Usage, What doesn't change, References.
+**Include when they add value:** Motivation, Usage, What doesn't change, Observability, References.
 **Only include for complex changes:** Architecture diagram, Goals/Non-Goals, Deployment notes.
 
 ### Summary
@@ -43,13 +58,17 @@ What and why, 2-3 sentences. Keep from original if already concise.
 ### Motivation
 The problem being solved, with observed impact if available. Keep from original if already concise. Skip if the Summary already covers it adequately.
 
+When the conversation names a specific customer, incident, ticket, or metric, **use the concrete name** ("Northwind reports..."), not the category ("outbound-heavy customers report..."). Concrete references ground reviewer trust and survive the spec longer than vague stand-ins.
+
 ### Goals / Non-Goals
 Scope boundaries **with reasoning for each non-goal**. Not just "X is out of scope" but "X is out of scope because Y." This invites reviewers to push back on scope decisions.
 
-Skip for small features where the scope is obvious from the Summary.
+**One sentence per non-goal.** If you find yourself writing a paragraph, the reasoning belongs in a Decision instead. Skip the section entirely for small features where the scope is obvious from the Summary.
 
 ### Architecture
-A **mermaid diagram** showing data flow and module boundaries — **only when the change involves multiple interacting modules or non-obvious data flow**. A single component wired to an existing hook does not need a diagram. If the reviewer can understand the architecture from the Usage example alone, skip this section.
+A **mermaid diagram** showing data flow and module boundaries — **only when the change involves multiple interacting modules or non-obvious data flow**. A single component wired to an existing hook does not need a diagram.
+
+**Use conceptual node labels, not function names.** `findOrCreateRecordForUser` → "record resolver"; `clearStoredRecords, mode: 'all'` → "purge all upstream records"; `AccountRepo.delete` → "delete account row". The diagram should be readable by someone who has never opened the repo. If the reviewer can understand the architecture from the Usage example alone, skip the diagram entirely.
 
 Do NOT include file trees — the PR diff shows which files changed.
 
@@ -71,8 +90,22 @@ Explicitly list untouched areas so reviewers know what NOT to look at. Also prom
 ### Usage
 Show a concrete usage example with brief comments explaining the props/API. This is more useful than abstract type signatures — the reviewer sees real code and immediately understands how it works. If the usage example is self-explanatory, this replaces both "Key interfaces" and "How to extend" sections.
 
+### Observability
+Include only when the change adds non-trivial structured logging or metrics that operators will rely on.
+
+**Frame as operator questions, not slug tables.** A list of slug strings paired with their meanings duplicates the code. Instead, list the questions the logs are designed to answer. For example:
+
+> - What share of operations take the primary path vs the fallback?
+> - Which tenants still rely on the fallback, and why (missing input / incomplete input / wrong category)?
+> - Did the upstream provider reject any requests?
+> - For a deleted account, was upstream PII purged successfully?
+
+If the change includes a deliberate "what we never log" decision (e.g. PII redaction), state it once in plain prose.
+
 ### Acceptance criteria
 Concrete, verifiable statements that define "done." A reviewer can check these against the PR diff.
+
+**Each criterion must be checkable from observable behaviour or user-visible state, not internal symbols.** "Emits a provider-rejection event" beats "emits `record_rejected_by_provider` at error level". "The account row is NOT deleted" beats "`AccountRepo.delete` is NOT called". "Save still succeeds" beats "returns `{ ok: true }`".
 
 ### Deployment notes
 Migration order, rollback implications, blast radius. Only include when the change has non-trivial deployment considerations. Reviewers who approve PRs often own the deploy.
@@ -82,18 +115,23 @@ Links to Linear tickets, related specs, external docs.
 
 ## What to aggressively cut
 
-- **File trees and changed files lists** — the PR diff shows this
-- **Architecture diagrams for simple changes** — a single component doesn't need a flowchart
-- **Full code listings** — the code IS the implementation; show usage examples, not internals
-- **Abstract type signatures** — a usage example with comments is almost always clearer than `type Props = { ... }`
-- **"How to extend" when it duplicates Usage** — if the usage example shows the pattern, don't repeat it as numbered steps
-- **Risks & failure modes for low-risk changes** — if the worst case is "link doesn't render," it doesn't need a risk table
-- **Test coverage intent** — unless there's a non-obvious testing decision worth calling out
-- **Performance/security boilerplate** — unless there's a genuine non-obvious concern
-- **Implementation phases and step-by-step task breakdowns**
-- **Separate "Open questions" sections** — resolved questions become decisions; unresolved questions are flagged inline
-- **Anything a reviewer would never disagree with or have an opinion on**
-- **Overly specific implementation details in non-goals** — say "Easy to add later" not "Adding `window.Pylon('showNewMessage', text)` is ~3 lines"
+Each of these has been seen leaking into a distilled spec — cut on sight:
+
+- **Symbol names** — function, method, type, file, route, column names. The diff has them. Use the conceptual role instead.
+- **Type signatures and result shapes** — `{ ok: true, recordId } | { ok: false, error }` belongs in the code; "no result shapes change" belongs here.
+- **Log slug strings, error codes, HTTP status codes** — `record_rejected_by_provider` → "a provider-rejection event"; `422` → "rejected"; `404` → "not found".
+- **Field counts** — "the six X columns" / "all four fields" / "any of the six columns" — say "the X". Counts rot when the schema changes.
+- **File trees and changed-files lists** — the diff shows this.
+- **Architecture diagrams for simple changes** — a single component does not need a flowchart.
+- **Full code listings and abstract type definitions** — the code IS the implementation; show usage examples, not internals.
+- **"How to extend" sections that duplicate Usage** — if the example shows the pattern, do not repeat it as numbered steps.
+- **Risks & failure modes for low-risk changes** — if the worst case is "link does not render", no risk table.
+- **Test coverage intent** — unless there is a non-obvious testing decision worth calling out.
+- **Performance/security boilerplate** — unless there is a genuine non-obvious concern.
+- **Implementation phases and step-by-step task breakdowns.**
+- **Separate "Open questions" sections** — resolved questions become decisions; unresolved questions attach inline to the Decision they qualify.
+- **Anything purely informational with no reviewable opinion** (except Summary/Motivation/References).
+- **Overly specific implementation details in non-goals** — say "Easy to add later" not "Adding `someApi.someMethod(arg)` is ~3 lines".
 
 ## Proportionality
 
@@ -104,19 +142,34 @@ Rules of thumb:
 - **Medium feature** (3-10 files, multiple components): Add Motivation, What doesn't change, Architecture if needed. ~60-100 lines.
 - **Large feature** (10+ files, new patterns, migrations): Use all relevant sections. Up to ~150 lines.
 
-## Tone
+## Tone and language
 
 - Written for a code reviewer reading the PR diff alongside this document
 - Prefer "We chose X over Y because Z" over "X is used"
 - Be honest about tradeoffs — don't oversell
 - Keep it scannable in under 2 minutes
 
+**Plain language over domain jargon.** A reviewer who has not lived in the codebase should be able to parse every sentence. When you reach for a technical-sounding shorthand, expand it:
+
+- "tuple-aware idempotency" → "match the existing record by its content, not by ID alone"
+- "legacy heuristic" → "the previous behaviour (matching on ID only)"
+- "normalize the tuple" → "trim and uppercase the values before comparing"
+- "the X input" → name the actual thing ("the user's record")
+
+**Write decisions directly, not abstractly.** "Chose the user's record over the tenant default" beats "Chose user-stored record as the resolver input". The first sentence of a decision should make the choice intelligible without any prior context.
+
 ## Quality check
 
 Before writing, verify:
 - [ ] Every decision has an alternative and a reason
-- [ ] Acceptance criteria are concrete enough to verify against the PR
-- [ ] Nothing in the document is purely informational with no reviewable opinion (except Summary/Motivation/References)
-- [ ] The document is proportional to the change — no section exists just to fill a template
+- [ ] Acceptance criteria check observable behaviour, not internal symbols (function names, slug strings, result shapes)
+- [ ] No symbol names, type signatures, file paths, slug strings, or HTTP/error codes in prose. The PR diff has those.
+- [ ] No field-count references ("six columns", "all four fields") — say "the X"
+- [ ] No domain jargon a non-domain reader cannot parse on first read
+- [ ] No "Open questions" header. Resolved questions are gone; unresolved ones are attached inline to the relevant Decision
+- [ ] No deployment-notes section unless the deploy genuinely has non-trivial steps the reviewer-as-deployer needs to know
+- [ ] Non-goals are one sentence each
+- [ ] Concrete customer/ticket/incident names are used where the conversation provided them
 - [ ] No claims about codebase patterns that haven't been verified
 - [ ] No references to "the original plan" or "what was cut" — the reviewer only sees the final result
+- [ ] The document is proportional to the change — no section exists just to fill a template
