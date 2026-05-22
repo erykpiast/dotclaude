@@ -70,6 +70,8 @@ Set the PR title to exactly match the commit message header (first line). If the
 
 ### Step 6: Draft PR Description
 
+**Do not wrap or cap line width.** PR descriptions render as Markdown on GitHub and must not have a hard column limit (no 80-column wrap, no soft-wrap). Write each paragraph as a single continuous line and let the renderer handle wrapping. This applies to the body passed to `gh pr create` / `gh pr edit` as well.
+
 Structure with three H2 headers:
 
 - **Why** — The motivation for the change. If the reason is not clearly stated in the conversation context, the initial prompt, or a linked spec/ticket, **stop and ask the user** to provide the motivation before continuing. Do not guess or fabricate a "Why".
