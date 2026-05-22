@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Write, Grep, Glob, TodoWrite, Task, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, Bash(ls:*), Bash(echo:*), Bash(command:*), Bash(npm:*), Bash(claude:*)
+allowed-tools: Read, Write, Grep, Glob, TodoWrite, Task, AskUserQuestion, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, Bash(ls:*), Bash(echo:*), Bash(command:*), Bash(npm:*), Bash(claude:*)
 description: Generate a spec file for a new feature or bugfix
 category: validation
 argument-hint: "<feature-or-bugfix-description>"
@@ -71,15 +71,14 @@ After validating the problem from first principles, complete these technical che
 
 ### 2. Request Validation
 - Confirm request is well-defined and actionable
-- If vague or incomplete, STOP and ask clarifying questions
+- Note any vague areas or scope ambiguities — collect them for the **Clarification Batch** (see below) instead of interrupting research with one-off questions
 - Validate scope is appropriate (not too broad/narrow)
 
 ### 3. Quality Gate
-- Only proceed if you have 80%+ confidence in implementation approach
-- If uncertain, request additional context before continuing
+- Only proceed past research when you either have 80%+ confidence in the implementation approach **or** have a concrete list of decisions to batch-ask the user about
 - Document any assumptions being made
 
-**CRITICAL: If any validation fails, STOP immediately and request clarification.**
+**CRITICAL: If any validation fails, do not improvise. Add the unresolved item to the Clarification Batch and ask the user once, in batch, after research completes.**
 
 ## Your task
 
@@ -120,6 +119,54 @@ Before writing the detailed specification, map the complete system impact:
 
 **VERIFICATION: Ensure you can trace the complete end-to-end flow before proceeding to detailed specification.**
 
+## CLARIFICATION BATCH
+
+After problem analysis, context discovery, and integration mapping are complete — and **before** writing any section of the spec — collect every remaining ambiguity into one batched prompt using `AskUserQuestion`. Research first, then ask once.
+
+### When to skip this step entirely
+
+If the request entered with high clarity, do not invoke `AskUserQuestion` at all. Proceed directly to spec creation. Bothering the user with no-op confirmation questions is worse than silently proceeding.
+
+Skip when:
+- The spec is being created after a brainstorming or design conversation that already resolved the open decisions
+- The user's prompt is detailed enough that every material decision has a clear answer
+- All remaining gaps are implementation-detail choices that belong in the diff, not the spec
+
+### What counts as a question worth asking
+
+Ask only when a decision **materially shapes the spec** and you cannot pick the right answer from context. Examples:
+
+- Scope ambiguity: "Does this need to handle X, or is X out of scope?"
+- Architectural fork: approach A vs. approach B with different trade-offs
+- External integration choice: library X vs. library Y vs. roll our own
+- Data model decision: flat field vs. nested object, denormalize vs. join
+- UX flow decision: inline edit vs. modal, sync vs. async confirmation
+
+Do **not** ask:
+- Stylistic preferences (pick a sensible default)
+- Questions whose answers don't change the spec
+- Questions you can confidently answer from existing codebase patterns
+- Implementation-detail questions that belong in the diff
+
+### How to formulate each question
+
+For each question:
+
+1. **Question text** — concrete and decision-shaped. Avoid open-ended "what do you think about X?"
+2. **2–4 options** — each one phrase, mutually exclusive
+3. **Description per option** — one short sentence stating the concrete trade-off (what you gain, what you give up)
+4. **Recommendation** — pick the option you would default to if the user said "you decide". Put it first with `(Recommended)` appended to its label. **Always recommend one.**
+
+### How to batch
+
+`AskUserQuestion` accepts up to 4 questions per call. If there are more than 4 ambiguities, send multiple calls in sequence. Do not interleave questions with implementation work.
+
+### After answers come back
+
+- Apply each answer to the corresponding part of the spec
+- A resolved decision becomes a **Decision** in the spec body or relevant section, not an entry in **Open Questions**
+- Reserve the spec's **Open Questions** section for items that remain genuinely unresolvable (e.g., awaiting external input the user also doesn't have yet)
+
 Then create a spec document that includes:
 
 1. **Title**: Clear, descriptive title of the feature/bugfix
@@ -156,7 +203,7 @@ Then create a spec document that includes:
     - Phase 1: MVP/Core functionality
     - Phase 2: Enhanced features (if applicable)
     - Phase 3: Polish and optimization (if applicable)
-16. **Open Questions**: Any unresolved questions or decisions
+16. **Open Questions**: Genuinely unresolvable items only — decisions already settled via the Clarification Batch go in their relevant section as resolved choices, not here
 17. **References**:
     - Links to related issues, PRs, or documentation
     - External library documentation links
