@@ -72,7 +72,9 @@ Set the PR title to exactly match the commit message header (first line). If the
 
 **Do not wrap or cap line width.** PR descriptions render as Markdown on GitHub and must not have a hard column limit (no 80-column wrap, no soft-wrap). Write each paragraph as a single continuous line and let the renderer handle wrapping. This applies to the body passed to `gh pr create` / `gh pr edit` as well.
 
-Structure with three H2 headers:
+**Size the description to the changeset.** Before drafting, look at `git diff --stat main..HEAD`. The description should not dwarf the diff. If the rendered description is more than ~3× the meaningful changed lines, you are overwriting. A 3-line change to one file should produce a paragraph, not an essay — unless the change is genuinely subtle (a tricky concurrency bug, a non-obvious algorithmic choice, a security-sensitive carve-out with broad implications) and the reasoning is load-bearing for review.
+
+**Default structure (non-trivial changes)** — three H2 headers:
 
 - **Why** — The motivation for the change. If the reason is not clearly stated in the conversation context, the initial prompt, or a linked spec/ticket, **stop and ask the user** to provide the motivation before continuing. Do not guess or fabricate a "Why".
 - **What** — Exactly matches the commit message body. If multiple commits, summarize all changes on the branch.
@@ -86,6 +88,20 @@ Structure with three H2 headers:
     - [ ] Select the SSO option
     - [ ] Authenticate with SSO
     - [ ] Verify the dashboard is displayed
+
+**Tiny changes (roughly ≤ ~10 changed lines, single file, single concern)** — collapse the structure:
+
+- Drop the **What** section. The diff already shows what; restating it bloats the description.
+- Use a single **Why** paragraph (2–4 sentences max) that explains the observed problem and the one-line nature of the fix. State the user-visible effect, not the implementation mechanics.
+- Keep **Testing** to one H3 scenario unless the change genuinely has multiple distinct verification paths. Do not add a "verify nothing else regressed" section — that's the default expectation, not a scenario.
+
+**Things to leave out unless they materially help the reviewer:**
+
+- Prior commit hashes, ticket IDs of historical work, or "follow-up to #X" framing when the current change stands on its own. A link in the PR body to a Linear ticket is fine; archaeology is not.
+- Production revision identifiers, deployment hashes, log entry IDs, or any string that will be stale within a week.
+- Detailed mechanism analysis (which regex matches what, why a sibling key behaves differently) when one sentence captures the gist. Save the depth for the commit body or a code comment if it's truly needed.
+- "Behavioural change is only visible after deploy" or similar boilerplate — assume the reviewer knows how deploys work.
+- Mentions of typecheck/lint/test-count passing — that's CI's job.
 
 ### Step 7: Confirm and Execute
 
