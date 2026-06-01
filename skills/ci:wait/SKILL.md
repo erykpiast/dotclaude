@@ -1,6 +1,6 @@
 ---
 description: Wait for CI on the current PR to finish (all green, or first failure)
-allowed-tools: Bash(gh:*), Bash(git:*), Bash(~/.claude/commands/ci/wait-checks.sh:*)
+allowed-tools: Bash(gh:*), Bash(git:*), Bash(~/.claude/skills/ci:wait/wait-checks.sh:*)
 category: workflow
 argument-hint: "[check description, e.g. tests | staging deployment | e2e]"
 ---
@@ -46,7 +46,7 @@ If the check list is empty (checks haven't registered yet), skip resolution and 
 Run the polling helper in background (`run_in_background: true`). After kicking off the background task, return control to the user with a short note identifying which check(s) are being tracked. Do not poll, sleep, or block; the runtime will notify you when the background task exits, and only then proceed to Step 4.
 
 ```
-~/.claude/commands/ci/wait-checks.sh "FILTER"
+~/.claude/skills/ci:wait/wait-checks.sh "FILTER"
 ```
 
 - When `$ARGUMENTS` was provided, `FILTER` is the resolved substring from Step 2.
