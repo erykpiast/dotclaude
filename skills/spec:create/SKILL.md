@@ -7,6 +7,46 @@ argument-hint: "<feature-or-bugfix-description>"
 
 ## Context
 - Existing specs: !`ls -la specs/ 2>/dev/null || echo "No specs directory found"`
+- Project context map: !`cat CONTEXT.md 2>/dev/null || echo "NO_CONTEXT_FILE"`
+
+## CONTEXT.md Protocol
+
+**Read `CONTEXT.md` (shown above) before research.** If it printed `NO_CONTEXT_FILE`, create it from the skeleton at the end of this section — `CONTEXT.md` must always exist.
+
+`CONTEXT.md` is a *map*. Its `## Format` section declares where this project keeps its glossary and decisions: inline, or pointing to files like `docs/glossary.md` or `docs/adr/`. Read whatever it points to, and write new terms/decisions in that same layout. Stay in single-file (inline) mode unless `## Format` says otherwise — never split files on your own.
+
+Use the glossary while writing the spec: use its terms verbatim, and when the request introduces a term the glossary doesn't define, define it precisely and append it. When the request uses a term loosely, pin it to the glossary's meaning rather than inventing a synonym.
+
+**Decisions are opt-in.** Only if `CONTEXT.md`'s `## Format` declares a decisions/ADR location, record qualifying decisions there — and only those that clear the **ADR bar**: hard to reverse, surprising, *and* a genuine trade-off between alternatives. If the project tracks no decisions, leave all decisions in the spec body. Never create a decisions section on your own.
+
+**Answer from the repo and glossary before asking the user** (reinforces the Clarification Batch rule below): never ask what the code or glossary already settles.
+
+<details>
+<summary>CONTEXT.md skeleton (single-file mode)</summary>
+
+```markdown
+# Context
+
+> Entry point for this project's domain language.
+> Read this first. It is a map + glossary — not a spec, plan, or scratchpad.
+
+## Format
+
+<!-- How this project organizes context. Edit to match reality.
+     Switch a line to a path when the project grows, e.g. `see docs/glossary.md`.
+     Skills follow whatever this section declares; they never split files on their own. -->
+- **Glossary:** inline below (single-file mode)
+<!-- Optional: if this project tracks decisions/ADRs, add a line pointing to them, e.g.
+     `- **Decisions:** see docs/adr/`  — skills only read/write decisions when this exists. -->
+
+## Glossary
+
+<!-- One term per entry, alphabetical. Precise and project-specific.
+     State what a term is NOT when there's a common confusion. -->
+
+_None yet._
+```
+</details>
 
 ## Optional: Enhanced Library Documentation Support
 
@@ -165,6 +205,7 @@ For each question:
 
 - Apply each answer to the corresponding part of the spec
 - A resolved decision becomes a **Decision** in the spec body or relevant section, not an entry in **Open Questions**
+- If the project tracks decisions (per `CONTEXT.md`'s `## Format`) and a resolved decision clears the **ADR bar** (hard to reverse, surprising, *and* a real trade-off), also record it there — it outlives this spec
 - Reserve the spec's **Open Questions** section for items that remain genuinely unresolvable (e.g., awaiting external input the user also doesn't have yet)
 
 Then create a spec document that includes:

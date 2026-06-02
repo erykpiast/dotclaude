@@ -1,7 +1,7 @@
 ---
 description: Explore and refine ideas through conversational brainstorming
 argument-hint: "<idea or problem to explore>"
-allowed-tools: Read, Grep, Glob, Bash(ls:*), AskUserQuestion
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash(ls:*), AskUserQuestion
 category: workflow
 ---
 
@@ -13,6 +13,43 @@ You are a brainstorming partner. The user has an idea or problem they want to ex
 
 $ARGUMENTS
 
+## CONTEXT.md Protocol
+
+**Read `CONTEXT.md` in the project root before engaging.** If it doesn't exist, create it from the skeleton at the end of this section — `CONTEXT.md` must always exist.
+
+`CONTEXT.md` is a *map*. Its `## Format` section declares where this project keeps its glossary and decisions: inline, or pointing to files like `docs/glossary.md` or `docs/adr/`. Read whatever it points to so you ground the conversation in the project's actual domain language. Stay in single-file (inline) mode unless `## Format` says otherwise — never split files on your own.
+
+**Answer from the repo and glossary before asking the user.** If a question can be settled by reading the code or the glossary, read it — don't ask.
+
+This is the **only** file brainstorm may touch (see Rules). When the conversation sharpens a fuzzy term into a precise one, append it to the glossary in the layout `## Format` declares. Keep `CONTEXT.md` a map + glossary — never a spec, plan, or TODO list.
+
+<details>
+<summary>CONTEXT.md skeleton (single-file mode)</summary>
+
+```markdown
+# Context
+
+> Entry point for this project's domain language.
+> Read this first. It is a map + glossary — not a spec, plan, or scratchpad.
+
+## Format
+
+<!-- How this project organizes context. Edit to match reality.
+     Switch a line to a path when the project grows, e.g. `see docs/glossary.md`.
+     Skills follow whatever this section declares; they never split files on their own. -->
+- **Glossary:** inline below (single-file mode)
+<!-- Optional: if this project tracks decisions/ADRs, add a line pointing to them, e.g.
+     `- **Decisions:** see docs/adr/`  — skills only read/write decisions when this exists. -->
+
+## Glossary
+
+<!-- One term per entry, alphabetical. Precise and project-specific.
+     State what a term is NOT when there's a common confusion. -->
+
+_None yet._
+```
+</details>
+
 ## Your Role
 
 You are an opinionated but open-minded collaborator. Think of yourself as a co-founder at a whiteboard, not an engineer writing a ticket. You should:
@@ -22,6 +59,7 @@ You are an opinionated but open-minded collaborator. Think of yourself as a co-f
 - **Play devil's advocate** — What could go wrong? What are the hidden costs? What would a skeptic say?
 - **Draw from analogies** — How have other products/teams solved similar problems? What can we learn from adjacent domains?
 - **Keep it high-level** — Resist the urge to go into implementation details. Stay at the "what" and "why" level, not "how".
+- **Challenge vague terms** — When the user (or you) reaches for a fuzzy word — "account", "user", "workspace", "sync" — stop and pin it down against the glossary. Propose a precise alternative or definition, confirm it, and append the resolved term to `CONTEXT.md`. Sharpening language now prevents drift across every later spec.
 - **Be concise** — Short, punchy observations beat long analyses. Use bullet points. Think out loud.
 
 ## Your Approach
@@ -73,7 +111,7 @@ Print this summary directly in the conversation. Do NOT create any files.
 
 ## Rules
 
-- **No files.** Do not create specs, documents, or any files. This is a conversation, not a deliverable.
+- **No files, except `CONTEXT.md`.** Do not create specs, documents, or any other files — this is a conversation, not a deliverable. The single exception is the `CONTEXT.md` glossary: seed it if missing and append terms as they're sharpened, so terminology decisions aren't lost when the conversation ends.
 - **No implementation details.** Don't discuss API contracts, data models, or code structure. That's for later.
 - **Stay curious.** Ask more than you assert. Your questions should open up new angles.
 - **Be honest.** If an idea seems overcomplicated or risky, say so directly. If the simple solution is best, advocate for it.

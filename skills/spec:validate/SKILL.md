@@ -104,6 +104,17 @@ Produce a **Reference Validation Report** section in the output:
 
 > **CRITICAL**: Any broken link or content mismatch is a **Critical Gap** that blocks implementation readiness. A spec that cites non-existent documentation or misrepresents referenced material cannot be trusted.
 
+### CONTEXT.md Consistency (MANDATORY)
+
+**Read `CONTEXT.md` in the project root first.** If it doesn't exist, flag that as a gap (the project should have one) and skip the sub-checks below. `CONTEXT.md` is a *map*: follow its `## Format` section to locate the glossary and decisions, whether inline or in linked files like `docs/glossary.md` / `docs/adr/`.
+
+Then check the spec against it:
+
+- **Terminology alignment.** Every domain term in the spec that the glossary defines must be used with the glossary's meaning. Flag terms the spec uses loosely, redefines, or substitutes with an undefined synonym. Flag new load-bearing terms the spec introduces that are missing from the glossary — they should be added.
+- **Decision capture (only if the project tracks decisions).** If — and only if — `CONTEXT.md`'s `## Format` declares a decisions/ADR location, check that any spec decision clearing the **ADR bar** (hard to reverse, surprising, *and* a genuine trade-off) is recorded there. If the project tracks no decisions, skip this check entirely — do not push the project to adopt ADRs.
+
+Report under a **Context Consistency** heading: terminology mismatches, missing glossary terms, and (when applicable) uncaptured ADR-bar decisions. Treat a redefined core term as a **Critical Gap**; treat an uncaptured irreversible decision as a Critical Gap only when the project tracks decisions.
+
 ### Additional Quality Checks:
 
 **Completeness Assessment**
@@ -179,6 +190,7 @@ Be aggressive about cutting features:
 The analysis will provide:
 - **Summary**: Overall readiness assessment (Ready/Not Ready)
 - **Reference Validation**: Broken links, content mismatches, unsupported claims, missed guidance
+- **Context Consistency**: Terminology mismatches with the glossary, missing glossary terms, and uncaptured ADR-bar decisions (only if the project tracks decisions)
 - **Critical Gaps**: Must-fix issues blocking implementation
 - **Missing Details**: Specific areas needing clarification
 - **Risk Areas**: Potential implementation challenges
