@@ -1,5 +1,5 @@
 ---
-description: Apply open PR review feedback (human + agent threads) — auto-implement what the PR author already approved, evaluate and confirm the rest, then commit in chunks
+description: Apply open PR review feedback (human + agent threads) — auto-implement what the PR author already approved, evaluate and confirm the rest, commit in chunks, then optionally push and resolve the threads
 allowed-tools: Bash(gh:*), Bash(git:*), Bash(jq:*), Read, Grep, Glob, Edit, MultiEdit, Write, Task, AskUserQuestion, TodoWrite
 argument-hint: "[loose natural-language decisions for ambiguous suggestions]"
 category: workflow
@@ -94,15 +94,20 @@ Produce a flat list. Each item has:
 - **options** — alternatives the reviewer offered, recommended one marked
 - **ambiguous** — true iff `options` is non-empty AND `$ARGUMENTS` doesn't resolve it
 
-## Step 5: Evaluate feasibility of `needs-eval` items
+## Step 5: Verify and evaluate `needs-eval` items
 
-For each `needs-eval` item, check it against the **current code** (Read/Grep): is the reported issue real and still present, or already addressed / a false positive? Write a one-line assessment per item.
+Never ask the user about a `needs-eval` item before you've verified it yourself. For each item, check it against the **current code** (Read/Grep) and write a one-line **assessment**: is the reported issue real and still present, already addressed, or a false positive? For suggestions (refactors, alternatives) where "real" doesn't apply, judge whether it's worth doing and **dig deeper into why it does or does not make sense** — don't relay the reviewer's claim, evaluate it.
 
-Then resolve in one batched pass before any implementation:
+This assessment is mandatory and **must be included in every question you raise** (e.g. "issue verified real — null deref on empty input", "suggestion worth considering — would remove the duplicate parse", "claimed race condition not reproducible in current code").
 
-- Drop items already fixed in the code (note them in the final report).
+How you handle each item then depends on the suggester:
+
+- **Agent items** — if the issue is **not verified real** (false positive, already fixed, or the suggestion doesn't hold up), **skip without asking**; just note it and your reasoning in the final report. If it **is** verified real (or a worthwhile suggestion), ask the user to confirm implement vs. skip, leading with your assessment.
+- **Human items** — **never discard without asking**, even when your assessment says the suggestion doesn't make sense. Always ask, leading with your assessment and the deeper reasoning behind it so the user can decide with full context.
+
+For items you do ask about:
 - For ambiguous items (`options` unresolved by `$ARGUMENTS`), include the reviewer's recommendation as the first `AskUserQuestion` option labeled `(Recommended)`.
-- For each remaining `needs-eval` item, ask the user to **confirm implement vs. skip**, surfacing your feasibility assessment. Always include a `Skip` option.
+- Always include a `Skip` option.
 - Do NOT drop `needs-eval` items simply because they were not mentioned in `$ARGUMENTS` — their absence from `$ARGUMENTS` means "no pre-resolved decision," not "skip."
 
 Batch with `AskUserQuestion` (≤4 questions per call). **Approved items skip this step entirely** — they're already greenlit. All questions must be resolved before implementation starts; don't interleave questions with execution.
@@ -156,13 +161,58 @@ After all subagents finish, for each commit group in order:
 
 If a group's files also contain unrelated changes (a subagent strayed out of scope), stop and ask before committing.
 
-Do not push, do not resolve threads, do not reply on the PR — leave those to the user (or a later `/git:push` / `/ship`).
+Keep the commit SHA for each addressed item — you'll cite it when replying to that item's thread.
 
-## Step 9: Report
+## Step 9: Offer to push
+
+The commits are still local. Ask the user whether to push, with a single `AskUserQuestion` (Yes / No):
+
+> Committed N fixes locally. Push to `<headRefName>` and update the PR?
+
+- **No** — stop here. Go straight to the report (Step 11), noting the commits are local and the threads are untouched. Do **not** post replies or resolve threads: the "Fixed in …" links won't resolve until the branch is pushed.
+- **Yes** — push the current branch (`git push`, or the repo's existing upstream), then continue to Step 10.
+
+## Step 10: Reply to and resolve threads
+
+Only after a successful push. For each thread-backed item (skip `review-<slug>` summary bodies — they aren't resolvable threads, just note them in the report), post one reply, then resolve the thread.
+
+**Reply body:**
+- **Addressed items** — `Fixed in <commit-url>`, where `<commit-url>` is `https://github.com/<owner>/<repo>/commit/<sha>` for the commit that item landed in (Step 8). Add a one-line note if the fix diverged from the suggestion.
+- **Not-valid / skipped items** — a short, courteous reason: the assessment that justified dropping it (agent items auto-skipped as not verified real, or items the user chose to skip). Lead with the conclusion, then the reasoning — e.g. `Not addressing this — the claimed null deref can't occur because <reason>.`
+- **Author-declined items** — already answered by the author; leave them alone (don't reply, don't resolve) unless the user asks.
+
+Post the reply with the thread's GraphQL node **id** captured in Step 2:
+
+```bash
+gh api graphql -F threadId=<thread-node-id> -f body='<reply body>' -f query='
+  mutation($threadId:ID!, $body:String!) {
+    addPullRequestReviewThreadReply(input:{pullRequestReviewThreadId:$threadId, body:$body}) {
+      comment { id url }
+    }
+  }'
+```
+
+Then resolve it:
+
+```bash
+gh api graphql -F threadId=<thread-node-id> -f query='
+  mutation($threadId:ID!) {
+    resolveReviewThread(input:{threadId:$threadId}) {
+      thread { id isResolved }
+    }
+  }'
+```
+
+If a reply or resolve call fails (permissions, already resolved, stale id), don't abort the rest — note the failure for that thread in the report and move on.
+
+## Step 11: Report
 
 - **Addressed** — item ids + the commit sha each landed in, noting which were auto-applied (author-approved) vs. confirmed
-- **Skipped** — item ids + reason (author declined, already addressed, user skipped, blocked)
+- **Skipped** — item ids + reason (author declined, already addressed, agent item not verified real, user skipped, blocked); for auto-skipped agent items include the assessment that justified dropping it
 - **Commits** — sha + subject for each new commit
+- **Threads** — which were replied to and resolved, and any reply/resolve calls that failed (with the reason)
 - **Follow-ups** — anything larger than expected or needing the user's attention
 
-End by noting the new commits are local: the PR won't update until the user pushes.
+End with the push state:
+- **Pushed** — the PR is updated; the addressed threads are answered and resolved.
+- **Not pushed** — the new commits are local and the threads are untouched; the PR won't update until the user pushes.
