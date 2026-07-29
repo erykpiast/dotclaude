@@ -77,17 +77,25 @@ Set the PR title to exactly match the commit message header (first line). If the
 **Default structure (non-trivial changes)** — three H2 headers:
 
 - **Why** — The motivation for the change. If the reason is not clearly stated in the conversation context, the initial prompt, or a linked spec/ticket, **stop and ask the user** to provide the motivation before continuing. Do not guess or fabricate a "Why".
-- **What** — Exactly matches the commit message body. If multiple commits, summarize all changes on the branch.
-- **Testing** — Manual testing scenarios inferred from the conversation and implementation:
-  - Create an H3 header for each scenario
-  - Each scenario contains precise manual steps as checkbox bullets
-  - Never include steps like "run tests" or "linting passes" — those belong in CI
-  - Example:
-    ### SSO Login
-    - [ ] Go to the login page
-    - [ ] Select the SSO option
-    - [ ] Authenticate with SSO
-    - [ ] Verify the dashboard is displayed
+- **What** — The net change the branch makes, at branch altitude. For a single new commit this matches the commit message body. With multiple commits, write it independently: per-commit bodies are legitimately granular, and inheriting that granularity here is what turns a description into a changelog.
+- **Testing** — Manual scenarios a reviewer can run to observe the change. Create an H3 header per scenario, with precise steps as checkbox bullets.
+
+  Every scenario must pass all three of these gates:
+
+  1. **Observable** — the step produces something a human can see: UI state, CLI output, a file's contents, an API response. "All tests pass", "types check", "no lint errors", "CI is green" fail this gate — they observe the toolchain, not the change.
+  2. **Reachable by the reviewer** — someone with the branch checked out and no knowledge of the diff can follow the steps as written.
+  3. **Would not run in CI** — if a machine already does it on every push, it is not a testing scenario. This is the sharpest filter; apply it to every bullet before writing it.
+
+  Example:
+  ### SSO Login
+  - [ ] Go to the login page
+  - [ ] Select the SSO option
+  - [ ] Authenticate with SSO
+  - [ ] Verify the dashboard is displayed
+
+  **When the change has no product surface** (prompt/skill edits, docs, config, tooling), the scenario is exercising *that* surface: invoke the command, skill, or script and describe the behaviour that should differ — naming the old behaviour too, so the reviewer knows what "correct" looks like.
+
+  If there is genuinely nothing a human can observe, write the section as a single line — "No runtime behaviour change — covered by CI." — and stop. Do not invent a scenario to fill the section, and do not fall back to running the test suite.
 
 **Tiny changes (roughly ≤ ~10 changed lines, single file, single concern)** — collapse the structure:
 
@@ -121,14 +129,22 @@ If there are uncommitted changes, draft a commit message following the same conv
 
 Skip this step if there are no uncommitted changes.
 
-### Step 9: Propose PR Updates
+### Step 9: Regenerate, Then Apply the Minimal Edit
 
-Fetch the existing PR title and body. Based on the new commits (both already pushed and about to be pushed), propose:
+Fetch the existing PR title and body.
 
-- **Updated PR title** — only if the scope of the PR has materially changed
-- **Updated PR description** — amend the What and Testing sections to reflect the new commits; preserve the existing Why section unless it's now inaccurate
+**Draft the What and Testing sections from scratch.** Work from the branch's final state — `git diff main...HEAD` and `git diff --stat main...HEAD` — not from the new commits, and not by appending to what is already there. Write it as if the whole branch had landed in a single commit and you were describing it for the first time. Follow Step 6 in full, including the size and altitude rules.
 
-Show the existing and proposed versions side by side so the user can see what changed.
+**Intra-branch churn is invisible to the reviewer.** A bug introduced and then fixed on this branch, a refactor of code this branch itself added, a fix applied in response to review feedback on unmerged code — none of these are changes worth describing. The reviewer sees only the net result, so describe only the net result. The path taken to get there is not part of the change.
+
+**Then compare your fresh draft against the live body and apply the smallest edit that reconciles them:**
+
+- If the fresh draft says the same thing as what's already there, leave the body untouched and tell the user so. This is the common outcome for follow-up commits.
+- Preserve the existing **Why** verbatim unless the branch's motivation has actually changed.
+- Preserve existing checkbox state in **Testing** — reviewers tick boxes. Add a scenario only for behaviour that is genuinely new; remove one only if it is now wrong.
+- **Updated PR title** — only if the scope of the PR has materially changed.
+
+Report the outcome as either "description unchanged" or a short list of the specific edits. Do not print a full side-by-side rewrite when a few words changed.
 
 ### Step 10: Confirm and Execute
 
