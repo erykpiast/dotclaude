@@ -13,6 +13,8 @@ The core distinction: **threads the PR author already approved get implemented a
 
 **Decisions passed in `$ARGUMENTS`:** $ARGUMENTS
 
+`$ARGUMENTS` supplies **decisions for specific items only** — it is never an authoritative list of what to fix. Items not mentioned in `$ARGUMENTS` are still processed; they simply have no pre-resolved decision and will be evaluated and confirmed per Step 5. The only exception: if `$ARGUMENTS` contains explicit scope-limiting language ("only the approved threads", "skip agent reviews"), honor that scope restriction.
+
 ## Step 1: Find the PR
 
 Run in parallel:
@@ -101,6 +103,7 @@ Then resolve in one batched pass before any implementation:
 - Drop items already fixed in the code (note them in the final report).
 - For ambiguous items (`options` unresolved by `$ARGUMENTS`), include the reviewer's recommendation as the first `AskUserQuestion` option labeled `(Recommended)`.
 - For each remaining `needs-eval` item, ask the user to **confirm implement vs. skip**, surfacing your feasibility assessment. Always include a `Skip` option.
+- Do NOT drop `needs-eval` items simply because they were not mentioned in `$ARGUMENTS` — their absence from `$ARGUMENTS` means "no pre-resolved decision," not "skip."
 
 Batch with `AskUserQuestion` (≤4 questions per call). **Approved items skip this step entirely** — they're already greenlit. All questions must be resolved before implementation starts; don't interleave questions with execution.
 

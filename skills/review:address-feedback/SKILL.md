@@ -13,6 +13,8 @@ The reviewed code (or spec) is **not committed yet**: this skill only edits the 
 
 **Decisions passed in `$ARGUMENTS`:** $ARGUMENTS
 
+`$ARGUMENTS` supplies **decisions for specific items only** — it is never an authoritative list of what to fix. Items not mentioned in `$ARGUMENTS` are still addressed; they simply have no pre-resolved decision and will be asked about if they are ambiguous. The only exception: if `$ARGUMENTS` contains explicit scope-limiting language ("only the critical ones", "skip LOW", "just the SQL fix"), honor that scope restriction.
+
 ## Step 1: Locate the review output in context
 
 Scan recent conversation turns for either source:
@@ -44,7 +46,7 @@ Briefly check each item against the current code/spec (Read/Grep) — drop anyth
 
 ## Step 3: Resolve ambiguities upfront
 
-Parse `$ARGUMENTS` as loose natural language and match statements to item ids or rough descriptions ("the auth one", "the critical security gap"). Reasonable matching is fine.
+Parse `$ARGUMENTS` as loose natural language and match statements to item ids or rough descriptions ("the auth one", "the critical security gap"). Reasonable matching is fine. Matched items have their ambiguity resolved; **unmatched items remain in scope** — they are not dropped.
 
 For items still ambiguous after parsing, gather decisions with **`AskUserQuestion`**:
 - One question per ambiguous item (group only if truly identical).
@@ -56,7 +58,7 @@ All questions must be resolved before implementation begins. Don't interleave qu
 
 ## Step 4: Choose severities and plan parallel groups
 
-Recommend addressing **CRITICAL + HIGH** now; present MEDIUM/LOW as optional. If the selection is obvious from `$ARGUMENTS` ("just the critical ones", "everything"), honor it; otherwise confirm the cut with the user.
+Recommend addressing **CRITICAL + HIGH** now; present MEDIUM/LOW as optional. If `$ARGUMENTS` contains explicit scope-limiting language ("just the critical ones", "everything", "skip MEDIUM"), honor it. Do NOT infer scope restriction from item-specific decisions — the presence of decisions for only some items does not mean the others are excluded.
 
 Then plan **parallel groups** — what can run concurrently. Items are independent if they touch disjoint files (or non-overlapping regions of the same file) and neither's output feeds the other. When in doubt, separate — cheap to over-split, expensive to merge-conflict. (There are no commit groups here; nothing gets committed.)
 
