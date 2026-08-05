@@ -140,6 +140,8 @@ Confirm the plan. A short "looks good" is enough.
 
 Launch a specialist subagent per parallel group via **Task**, all in a **single message** so they run concurrently.
 
+**Always pass `model: "sonnet"`** on every implementation subagent, regardless of the session's model. The items are already scoped, verified, and confirmed by this point — the subagents are executing a decided change, not deciding what to do — so a Sonnet-class model is the right tier. Do not inherit the parent model and do not upgrade individual groups.
+
 Match `subagent_type` to the work: tests → `testing-expert` (or the repo's `vitest`/`jest` variant); refactors → `refactoring-expert`; TS types → `typescript-type-expert`; React → `react-expert`; perf → `react-performance-expert` / `database-expert`; a11y → `accessibility-expert`; otherwise `general-purpose`.
 
 Each subagent prompt must contain:
