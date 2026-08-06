@@ -13,7 +13,13 @@ projects/
 plugins/
 sessions/
 .claude/
+chrome/
 history.jsonl
 policy-limits.json
 *.local.json
 mcp-needs-auth-cache.json
+remote-settings.json
+stats-cache.json
+.last-cleanup
+.last-update-result.json
+.npmrc
