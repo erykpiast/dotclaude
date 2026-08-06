@@ -1,5 +1,48 @@
 # Global Instructions
 
+## Prefer read-only wrappers for `gcloud` and `gigs`
+
+When **reading/inspecting** data from Google Cloud or Gigs (listing, describing, retrieving, getting config, etc.), use the read-only wrapper scripts instead of the bare CLI:
+
+- `gcloud` → `~/bin/gcloud-read-only`
+- `gigs` → `~/bin/gigs-read-only`
+
+These wrappers allow only read verbs and block anything that mutates state or exposes credentials (e.g. `gcloud auth print-access-token`, `gigs token`, `gigs *-credentials retrieve`).
+
+```bash
+# WRONG — bare command for a read
+gcloud compute instances list
+gigs subscriptions retrieve sub_123
+
+# CORRECT — read-only wrapper
+~/bin/gcloud-read-only compute instances list
+~/bin/gigs-read-only subscriptions retrieve sub_123
+```
+
+`~/bin` is not on `PATH`, so invoke the wrappers by their full `~/bin/...` path. For a mutating operation the wrapper will refuse; only then fall back to the bare command, and confirm first.
+
+## Prefer the `gg` CLI for supported GCP operations
+
+`gg` is Gigs' internal CLI wrapper around common `gcloud` tasks. When a task matches one of its subcommands, use `gg` instead of the raw `gcloud` command — it handles the correct flags, prompts, and defaults. Run `gg <command> --help` to see options.
+
+| Task | Use `gg` | Instead of raw `gcloud` |
+| --- | --- | --- |
+| Authenticate / refresh application default credentials | `gg gcp-login` | `gcloud auth login --update-adc` |
+| Temporarily elevate GCP permissions (request a PAM grant) | `gg elevate-permissions` | `gcloud pam grants create ...` |
+| Pin all Cloud Run traffic to a specific revision | `gg pin-revision --project <id> --service <name>` | `gcloud run services update-traffic ...` |
+
+```bash
+# WRONG — raw gcloud for a task gg covers
+gcloud auth login --update-adc
+gcloud run services update-traffic api-production --to-revisions=api-production-3b0edf4-0098-1=100 --region europe-west1
+
+# CORRECT — use gg
+gg gcp-login
+gg pin-revision --project gigs-backbone --service api-production --revision api-production-3b0edf4-0098-1
+```
+
+These are **mutating/auth** operations, so they are out of scope for the read-only wrappers above and require confirmation before running. For read-only inspection, keep using `~/bin/gcloud-read-only`. Fall back to raw `gcloud` only when no `gg` subcommand fits (confirm the current subcommand list with `gg --help`, since it may gain commands over time).
+
 ## Vitest: always use `CI=true` to prevent watch mode
 
 Claude Code's Bash tool runs commands in a pseudo-TTY, which makes vitest enter watch mode and hang indefinitely. **Always** prefix vitest/test commands with `CI=true`:
@@ -36,3 +79,26 @@ pnpm test -- src/app/(workspace)/billing/file.test.tsx
 # CORRECT
 pnpm test -- "src/app/(workspace)/billing/file.test.tsx"
 ```
+
+## User-invocable-only skills exist but are hidden from your skills listing
+
+These skills live in `~/.agents/skills` (symlinked into `~/.claude/skills`) and carry
+`disable-model-invocation: true`, which **deliberately removes them from the model-facing
+skills listing**. They are real and installed. You will not see them listed:
+
+`ask-matt`, `grill-me`, `grill-with-docs`, `handoff`, `implement`,
+`improve-codebase-architecture`, `setup-matt-pocock-skills`, `teach`, `to-spec`,
+`to-tickets`, `triage`, `wayfinder`, `writing-great-skills`
+
+Never tell the user one of these "doesn't exist", and never substitute a similarly-named
+listed skill (e.g. reaching for `/spec:create` when asked for `/to-spec` — different
+skills, different outputs). When the user names one:
+
+1. Read `~/.agents/skills/<name>/SKILL.md` and follow its process directly. The flag blocks
+   *autonomous* invocation, not the user asking for it by name.
+2. Re-derive this list when in doubt:
+   ```bash
+   grep -rl '^disable-model-invocation:[[:space:]]*true' ~/.claude/skills/*/SKILL.md
+   ```
+
+Only act on one of these when the user names it. Do not reach for them on your own.
