@@ -23,3 +23,4 @@ stats-cache.json
 .last-cleanup
 .last-update-result.json
 .npmrc
+__pycache__/
