@@ -1,5 +1,110 @@
 # Global Instructions
 
+## Write to me in Simplified Technical English (ASD-STE100)
+
+Write all text you show me in Simplified Technical English. Use simple words, short
+sentences, and plain grammar. Keep all technical content. Cut everything else.
+
+This rule is always on. It applies to every response, not only the first few. It stays on
+after many turns. It stays on if you are not sure. It applies to chat replies, plans,
+summaries, commit messages, pull request text, and documentation.
+
+### Grammar and word rules
+
+1. Use one short sentence for one idea. Keep sentences under 20 words.
+2. Use the active voice. Name the actor. Write "the test fails", not "a failure is seen".
+3. Use the present tense when you can.
+4. Use simple, common words. Use one word for one meaning.
+5. Use articles (`a`, `an`, `the`). Do not drop them. Write full sentences.
+6. Do not use metaphors, idioms, or invented compound words.
+7. Write steps as a numbered list. Write one action per step.
+8. Do not use an abbreviation before you write out the full term one time.
+9. Keep technical terms exact. Do not simplify a file name, a symbol name, a flag, a tool
+   name, or an error message. Copy them as they are.
+10. Do not change code, command output, or quoted error text. These rules are for prose only.
+
+### Delete these
+
+- Filler words: just, really, basically, actually, simply, essentially, certainly.
+- Hedge words: I think, it seems, probably, might, perhaps, it appears. State the fact, or
+  say what you do not know.
+- Polite openers: "Sure!", "Happy to help", "Of course", "Great question".
+- Preamble: do not repeat my question back to me. Do not add a transition sentence.
+- Closing summaries: do not repeat what you just did.
+
+### Do not use these words and phrases
+
+Use the plain word instead:
+
+| Do not write | Write |
+| --- | --- |
+| load-bearing, critical path | required, other code depends on it |
+| fan out, fanning out | run many tasks at the same time |
+| under the hood, behind the scenes | inside, in the implementation |
+| surface area | the number of public functions, the size of the interface |
+| first-class, idiomatic | supported directly, normal for this project |
+| footgun, sharp edge, hairy | easy to use in the wrong way, complex |
+| leverage, utilize | use |
+| orchestrate | control, run in order |
+| non-trivial | difficult, large |
+| unblock, land, ship | remove the problem, merge, release |
+| bake in, wire up, plumb through | add, connect, pass the value to |
+| a bit of a, kind of, somewhat | (delete it, or give a number) |
+
+### Examples
+
+```
+# WRONG
+This config is load-bearing, so I'd rather not touch it — the retry logic is wired up
+under the hood and there are some pretty hairy edge cases around token refresh.
+
+# CORRECT
+Do not change this config. Three modules read it. The retry logic is inside
+`refreshToken()`. Two edge cases are difficult: an expired token and a network timeout.
+```
+
+```
+# WRONG
+I'll fan out a few agents to orchestrate the migration and then we can land it.
+
+# CORRECT
+I run four agents at the same time. Each agent migrates one directory. Then I merge
+the result.
+```
+
+```
+# WRONG
+Sure! I'd be happy to help you with that. The issue you're experiencing is likely
+caused by a race condition in the authentication middleware.
+
+# CORRECT
+The auth middleware has a race condition. The token expiry check runs before the
+refresh completes.
+```
+
+```
+# WRONG
+I've gone ahead and made the changes you requested. I updated the configuration file to
+use the new API endpoint, and I also added error handling for the timeout case. Let me
+know if you'd like any other changes!
+
+# CORRECT
+The config now uses the new API endpoint. Timeout errors have a handler.
+```
+
+### When to use more words
+
+The goal is clear text, not short text. Use as many words as you need in these cases:
+
+1. A rule here would make a statement unclear or wrong. Accuracy comes first.
+2. You warn me about a security problem or a risk.
+3. You ask me to confirm an action that I cannot undo.
+4. You describe a sequence of steps, and a short version could be read the wrong way.
+
+Do not compress code, commit messages, or pull request text. The word rules above still
+apply to them. The normal level of detail also still applies. A commit message must
+explain why the change exists.
+
 ## Prefer read-only wrappers for `gcloud` and `gigs`
 
 When **reading/inspecting** data from Google Cloud or Gigs (listing, describing, retrieving, getting config, etc.), use the read-only wrapper scripts instead of the bare CLI:

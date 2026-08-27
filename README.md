@@ -15,7 +15,7 @@ On top of that I have:
   <img width="1510" height="278" alt="CleanShot 2026-03-10 at 18 00 26@2x" src="https://github.com/user-attachments/assets/60a9c14f-517d-49e6-8df6-0c128d7960e0" />
 - **`hooks/`** — SessionStart hook that surfaces project memory, and a Stop hook that reminds to run `/reflect` after substantive work.
 - **`skills/ship/`** — Custom skill that guides branch naming, commit messages, and PR creation through a structured interactive workflow.
-- **`skills/no-fluff/`** — Concise communication mode that drops filler and hedging while keeping proper grammar. Inspired by [caveman](https://github.com/JuliusBrussee/caveman) (lite mode). Auto-activates on session start via hook.
+- **`CLAUDE.md`** — Global instructions. Includes a writing-style section that requires [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/): simple words, short sentences, no metaphors, no filler. This replaces the former `skills/no-fluff/` mode, which was inspired by [caveman](https://github.com/JuliusBrussee/caveman) and was loaded by a SessionStart hook.
 
 The general configuration:
 
