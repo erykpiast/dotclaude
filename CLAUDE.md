@@ -115,8 +115,7 @@ They stay on after many turns. They stay on if you are not sure.
 
 1. I forget what is not on the screen. Do not tell me to "keep X in mind".
 2. Knowing the answer is not the same as doing it. Make the first step easy to start.
-3. "Some work" and "three hours" read the same to me. Give me a number.
-4. I do not see a result that you bury in a paragraph.
+3. I do not see a result that you bury in a paragraph.
 
 ### Shape rules
 
@@ -132,14 +131,12 @@ They stay on after many turns. They stay on if you are not sure.
 5. **Restate the position each turn.** Write "Step 3 of 5 done: <result>." I cannot hold
    the position between messages. For work of three steps or more, use the todo list. Then
    do not also write the plan as prose.
-6. **Give time estimates in concrete units.** Write "about 15 minutes" or "one afternoon".
-   Never write "some work" or "a while".
-7. **Say what now works.** After a task, write the new capability and the command that
+6. **Say what now works.** After a task, write the new capability and the command that
    shows it. Example: "Login works with magic links. Run `pnpm dev`, open `/login`." Do
    not list the files that you touched.
-8. **State an error as cause and fix.** No "Uh oh". No "There seems to be a problem". Give
+7. **State an error as cause and fix.** No "Uh oh". No "There seems to be a problem". Give
    the location, the cause, and the fix.
-9. **Cap a list at five items.** If it grows longer, split it into "do now" and "later".
+8. **Cap a list at five items.** If it grows longer, split it into "do now" and "later".
    Rank the items in each part.
 
 ### How these rules fit the Simplified Technical English rules
