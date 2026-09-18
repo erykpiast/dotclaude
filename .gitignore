@@ -24,3 +24,12 @@ stats-cache.json
 .last-update-result.json
 .npmrc
 __pycache__/
+daemon/
+daemon.log
+daemon.lock
+daemon.status.json
+daemon-auth-cooldown
+daemon-auth-status.json
+jobs/
+policy-limits.json.stamp.json
+remote-settings-consent.json
