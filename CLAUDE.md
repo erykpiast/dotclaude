@@ -174,26 +174,23 @@ summary. Keep them.
 4. Read only the first line and the last line. They must tell me what to do next and what
    changed. If they do not, rewrite them.
 
-## Prefer read-only wrappers for `gcloud` and `gigs`
+## Prefer read-only wrappers for `gcloud`
 
-When **reading/inspecting** data from Google Cloud or Gigs (listing, describing, retrieving, getting config, etc.), use the read-only wrapper scripts instead of the bare CLI:
+When **reading/inspecting** data from Google Cloud (listing, describing, retrieving, getting config, etc.), use the read-only wrapper script instead of the bare CLI:
 
 - `gcloud` → `~/bin/gcloud-read-only`
-- `gigs` → `~/bin/gigs-read-only`
 
-These wrappers allow only read verbs and block anything that mutates state or exposes credentials (e.g. `gcloud auth print-access-token`, `gigs token`, `gigs *-credentials retrieve`).
+This wrapper allows only read verbs and block anything that mutates state or exposes credentials (e.g. `gcloud auth print-access-token`).
 
 ```bash
 # WRONG — bare command for a read
 gcloud compute instances list
-gigs subscriptions retrieve sub_123
 
 # CORRECT — read-only wrapper
 ~/bin/gcloud-read-only compute instances list
-~/bin/gigs-read-only subscriptions retrieve sub_123
 ```
 
-`~/bin` is not on `PATH`, so invoke the wrappers by their full `~/bin/...` path. For a mutating operation the wrapper will refuse; only then fall back to the bare command, and confirm first.
+`~/bin` is not on `PATH`, so invoke the wrapper by its full `~/bin/...` path. For a mutating operation the wrapper will refuse; only then fall back to the bare command, and confirm first.
 
 ## Prefer the `gg` CLI for supported GCP operations
 
