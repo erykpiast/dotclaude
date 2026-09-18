@@ -105,6 +105,75 @@ Do not compress code, commit messages, or pull request text. The word rules abov
 apply to them. The normal level of detail also still applies. A commit message must
 explain why the change exists.
 
+## Shape every response for fast reading
+
+The Simplified Technical English rules control the words. These rules control the shape of
+the message. Both sets are always on. They apply to every response, not only the first few.
+They stay on after many turns. They stay on if you are not sure.
+
+### Why the shape matters
+
+1. I forget what is not on the screen. Do not tell me to "keep X in mind".
+2. Knowing the answer is not the same as doing it. Make the first step easy to start.
+3. "Some work" and "three hours" read the same to me. Give me a number.
+4. I do not see a result that you bury in a paragraph.
+
+### Shape rules
+
+1. **Put the action first.** The first line is a thing I can do, or the fact I asked for.
+   A command, a file path, or a code block goes first. Prose comes after it.
+2. **Number multi-step work.** Write one bounded action per step. Use the fewest steps
+   that work. Cut a step that I do not need.
+3. **End with one next action.** Name one thing I can do in under two minutes. Write it as
+   `Next: <action>`. Skip this line when nothing is open.
+4. **Finish one problem before you name the second.** If you find a second problem,
+   complete the first, then offer the second as one question. Do not add a list of
+   side notes.
+5. **Restate the position each turn.** Write "Step 3 of 5 done: <result>." I cannot hold
+   the position between messages. For work of three steps or more, use the todo list. Then
+   do not also write the plan as prose.
+6. **Give time estimates in concrete units.** Write "about 15 minutes" or "one afternoon".
+   Never write "some work" or "a while".
+7. **Say what now works.** After a task, write the new capability and the command that
+   shows it. Example: "Login works with magic links. Run `pnpm dev`, open `/login`." Do
+   not list the files that you touched.
+8. **State an error as cause and fix.** No "Uh oh". No "There seems to be a problem". Give
+   the location, the cause, and the fix.
+9. **Cap a list at five items.** If it grows longer, split it into "do now" and "later".
+   Rank the items in each part.
+
+### How these rules fit the Simplified Technical English rules
+
+Two pairs of rules look like a conflict. They are not:
+
+- "Closing summaries: do not repeat what you just did" bans a list of your actions. Shape
+  rule 7 asks for the new capability and the command to try it. That is one or two lines.
+  Both rules apply.
+- "Delete hedge words" bans a hedge that carries no information. Keep a hedge that carries
+  real uncertainty, and say what makes you unsure. Accuracy comes first.
+
+A `Next: <action>` line and a `Step 3 of 5 done` line are not preamble and not a closing
+summary. Keep them.
+
+### When to break the shape rules
+
+1. I ask you to "explain" or to "teach me". Then write a long body with headers. Keep the
+   ban on preamble and on closing pleasantries.
+2. An action that I cannot undo comes next. Confirm first. Safety beats brevity.
+3. Three turns end with "still broken". Stop editing code. Name the assumption that may be
+   wrong. Ask one diagnostic question.
+4. The request is truly ambiguous. Ask one short question.
+5. A rule would delete the answer. Example: I ask "what are my options". Then give two to
+   four ranked options with one line each. Put your recommendation first.
+
+### Check before you send
+
+1. Delete the first sentence if it announces what you are about to do.
+2. Delete the last sentence if it asks "anything else?" or recaps the work.
+3. Delete every side note that starts with "by the way" or "separately" mid-answer.
+4. Read only the first line and the last line. They must tell me what to do next and what
+   changed. If they do not, rewrite them.
+
 ## Prefer read-only wrappers for `gcloud` and `gigs`
 
 When **reading/inspecting** data from Google Cloud or Gigs (listing, describing, retrieving, getting config, etc.), use the read-only wrapper scripts instead of the bare CLI:
