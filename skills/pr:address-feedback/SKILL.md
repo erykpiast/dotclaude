@@ -1,5 +1,5 @@
 ---
-description: Apply open PR review feedback (human + agent threads) — auto-implement what the PR author already approved, evaluate and confirm the rest, commit in chunks, then optionally push and resolve the threads
+description: Apply open PR review feedback (human + agent threads) — auto-implement what the PR author already approved, evaluate and confirm the rest, commit in chunks, then resolve the threads and push
 allowed-tools: Bash(gh:*), Bash(git:*), Bash(jq:*), Read, Grep, Glob, Edit, MultiEdit, Write, Task, AskUserQuestion, TodoWrite
 argument-hint: "[loose natural-language decisions for ambiguous suggestions]"
 category: workflow
@@ -8,6 +8,8 @@ category: workflow
 # Address PR Feedback
 
 Resolve the open review threads on this branch's PR. The code is **already committed and pushed**, so this skill commits the fixes — keep commits in sensible logical groups alongside the parallelized work.
+
+**Order at the end: commit, reply, resolve, then push.** Step 10 explains why the push comes last.
 
 The core distinction: **threads the PR author already approved get implemented and committed without re-asking**; everything else (agent reviews, un-answered threads) is evaluated for feasibility and confirmed before implementing.
 
@@ -165,18 +167,22 @@ If a group's files also contain unrelated changes (a subagent strayed out of sco
 
 Keep the commit SHA for each addressed item — you'll cite it when replying to that item's thread.
 
-## Step 9: Offer to push
+## Step 9: Ask for push permission (do not push yet)
 
 The commits are still local. Ask the user whether to push, with a single `AskUserQuestion` (Yes / No):
 
-> Committed N fixes locally. Push to `<headRefName>` and update the PR?
+> Committed N fixes locally. Reply to the threads, resolve them, and push to `<headRefName>`?
 
-- **No** — stop here. Go straight to the report (Step 11), noting the commits are local and the threads are untouched. Do **not** post replies or resolve threads: the "Fixed in …" links won't resolve until the branch is pushed.
-- **Yes** — push the current branch (`git push`, or the repo's existing upstream), then continue to Step 10.
+- **No** — stop here. Go straight to the report (Step 12), noting the commits are local and the threads are untouched.
+- **Yes** — continue to Step 10. **Do not push yet.**
 
-## Step 10: Reply to and resolve threads
+## Step 10: Reply to and resolve threads — before the push
 
-Only after a successful push. For each thread-backed item (skip `review-<slug>` summary bodies — they aren't resolvable threads, just note them in the report), post one reply, then resolve the thread.
+Reply and resolve **first**, then push in Step 11. Do not reverse this order.
+
+**Why:** a push can hide an unanswered inline comment. Some repos run an in-house AI reviewer that reacts to the new head commit within seconds. It marks its own open inline comments as outdated or removes them, and their thread ids go stale. Then the reply and resolve calls fail, and the thread looks unanswered in the PR. The commit SHA from Step 8 is final, so the `Fixed in <commit-url>` link is correct before the push. The link is dead for the few seconds between the reply and the push. That is the accepted trade-off.
+
+For each thread-backed item (skip `review-<slug>` summary bodies — they aren't resolvable threads, just note them in the report), post one reply, then resolve the thread.
 
 **Reply body:**
 - **Addressed items** — `Fixed in <commit-url>`, where `<commit-url>` is `https://github.com/<owner>/<repo>/commit/<sha>` for the commit that item landed in (Step 8). Add a one-line note if the fix diverged from the suggestion.
@@ -205,9 +211,15 @@ gh api graphql -F threadId=<thread-node-id> -f query='
   }'
 ```
 
-If a reply or resolve call fails (permissions, already resolved, stale id), don't abort the rest — note the failure for that thread in the report and move on.
+If a reply or resolve call fails (permissions, already resolved, stale id), don't abort the rest — note the failure for that thread in the report and move on. A failure here does not block Step 11.
 
-## Step 11: Report
+## Step 11: Push
+
+Push the current branch (`git push`, or the repo's existing upstream).
+
+If the push fails, do not retry with a force flag. Report the error, and state that the threads are answered and resolved but the commit links stay dead until the branch reaches the remote. Give the user the exact command to finish the push.
+
+## Step 12: Report
 
 - **Addressed** — item ids + the commit sha each landed in, noting which were auto-applied (author-approved) vs. confirmed
 - **Skipped** — item ids + reason (author declined, already addressed, agent item not verified real, user skipped, blocked); for auto-skipped agent items include the assessment that justified dropping it
@@ -217,4 +229,5 @@ If a reply or resolve call fails (permissions, already resolved, stale id), don'
 
 End with the push state:
 - **Pushed** — the PR is updated; the addressed threads are answered and resolved.
-- **Not pushed** — the new commits are local and the threads are untouched; the PR won't update until the user pushes.
+- **Push failed** — the threads are answered and resolved, but the commits are local. The commit links do not work until the push succeeds. Give the command to retry.
+- **Not pushed** — the user declined. The new commits are local and the threads are untouched.
