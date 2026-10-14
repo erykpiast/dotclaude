@@ -44,4 +44,4 @@ For each confirmed candidate, follow the same process as `/remember`:
 
 ### Step 5: Evaluate graduation
 
-If any confirmed insight applies beyond this project (framework behavior, general tool preference, universal debugging technique), ask the user whether to graduate it to `~/.claude/CLAUDE.md` or `~/.claude/rules/`.
+If any confirmed insight applies beyond this project (framework behavior, general tool preference, universal debugging technique), ask the user whether to graduate it to `~/.claude/AGENTS.md` (or `~/.claude/CLAUDE.md` if it applies only to Claude Code) or `~/.claude/rules/`.

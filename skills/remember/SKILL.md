@@ -37,4 +37,4 @@ The user provides what to remember as arguments (e.g., `/remember Always use pnp
    ```
    Replace the `_(No entries yet.)_` placeholder if this is the first entry in that section.
 
-6. **Evaluate scope.** If the insight applies beyond this specific project (e.g., it's about a framework behavior, a general tool preference, or a universal debugging technique), suggest graduating it to `~/.claude/CLAUDE.md` or `~/.claude/rules/`. Ask the user before doing so.
+6. **Evaluate scope.** If the insight applies beyond this specific project (e.g., it's about a framework behavior, a general tool preference, or a universal debugging technique), suggest graduating it to `~/.claude/AGENTS.md` (or `~/.claude/CLAUDE.md` if it applies only to Claude Code) or `~/.claude/rules/`. Ask the user before doing so.
