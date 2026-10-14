@@ -1,5 +1,5 @@
 ---
-description: Apply agentic review feedback (/code-review or /spec:validate output in context) by severity — break down, parallelize across subagents, and edit the uncommitted working tree
+description: Apply agentic review feedback (/standards-spec-review, /code-review, /spec:validate, or any other review output in context) by severity — break down, parallelize across subagents, and edit the uncommitted working tree
 allowed-tools: Read, Grep, Glob, Edit, MultiEdit, Write, Task, AskUserQuestion, TodoWrite
 argument-hint: "[loose natural-language decisions for ambiguous suggestions]"
 category: workflow
@@ -7,7 +7,7 @@ category: workflow
 
 # Address Review Feedback
 
-Apply feedback from an **agentic review that just ran in this conversation** — `/code-review`'s consolidated report or `/spec:validate`'s findings, organized by CRITICAL / HIGH / MEDIUM / LOW severity.
+Apply feedback from an **agentic review that just ran in this conversation** — `/standards-spec-review`, `/code-review`, `/spec:validate`, or any other review skill or agent. Findings are normalized to CRITICAL / HIGH / MEDIUM / LOW severity, whatever format the review used.
 
 The reviewed code (or spec) is **not committed yet**: this skill only edits the working tree. It does **not** commit, stage, or group commits — that's the user's next step (`/git:commit`, `/ship`). It still parallelizes independent work across subagents.
 
@@ -17,14 +17,23 @@ The reviewed code (or spec) is **not committed yet**: this skill only edits the 
 
 ## Step 1: Locate the review output in context
 
-Scan recent conversation turns for either source:
+Scan recent conversation turns for review output. Any skill, command, or subagent that produced a list of findings against the current working tree (or spec) counts. Known shapes:
 
-1. **`/code-review`** — the "🗂 Consolidated Code Review Report" header, with `🔴 CRITICAL` / `🟠 HIGH` / `🟡 MEDIUM` (and any LOW) sections.
-2. **`/spec:validate`** — headers like "Critical Gaps", "Missing Details", "Reference Validation Report", "Overengineering Analysis", "Features to Cut", "Context Consistency".
+| Source | How to recognize it |
+| --- | --- |
+| `/standards-spec-review` | `## Standards` and `## Spec` sections, ending with a findings-per-axis summary line |
+| `/code-review` (built-in) | a `ReportFindings` tool call — findings with `file`, `line`, `summary`, `failure_scenario`, optional `category` and `verdict`, ranked most-severe first |
+| `/spec:validate` | headers like "Critical Gaps", "Missing Details", "Reference Validation Report", "Overengineering Analysis", "Features to Cut", "Context Consistency" |
+| `/security-review` | a list of vulnerabilities, usually with a severity or confidence per finding |
+| severity-bucketed reports (e.g. `code-review-expert`, `oracle`, older review skills) | `CRITICAL` / `HIGH` / `MEDIUM` / `LOW` sections, often with 🔴 / 🟠 / 🟡 markers |
 
-If neither is present, stop and tell the user:
+An unlisted shape still counts if it is a list of concrete findings about the code or spec. Do not reject a review because its headers differ from the table.
 
-> No `/code-review` or `/spec:validate` output found in this conversation. Run one of those first, or use `/pr:address-feedback` to act on open PR review threads.
+If several reviews ran, take the latest run of each source and combine them. Drop a review if code edits came after it and touched the files it reviewed — it may be stale; mention the drop in the plan. Merge duplicate findings across sources into one item and keep every source in its **detail**.
+
+If no review output is present, stop and tell the user:
+
+> No review output found in this conversation. Run a review first (for example `/standards-spec-review`, `/code-review`, or `/spec:validate`), or use `/pr:address-feedback` to act on open PR review threads.
 
 Do not auto-trigger a review.
 
@@ -32,9 +41,13 @@ Do not auto-trigger a review.
 
 Produce a flat list. Each item has:
 
-- **id** — `cr-<short-slug>` (code review) or `sv-<short-slug>` (spec validate)
-- **source** — `code-review` | `spec-validate`
-- **severity** — `critical` | `high` | `medium` | `low` (map spec-validate findings: Critical Gaps → critical; broken refs / content mismatches → critical; Missing Details → high; overengineering / features-to-cut → medium unless flagged otherwise)
+- **id** — `<prefix>-<short-slug>`; prefix by source: `ss` (standards-spec-review), `cr` (code-review), `sv` (spec:validate), `sr` (security-review), `rv` (any other)
+- **source** — the skill or agent that produced the finding
+- **severity** — `critical` | `high` | `medium` | `low`. If the reviewer gave a severity, keep it. Otherwise map it:
+  - `/standards-spec-review` — Spec: implementation looks wrong → high; missing or partial requirement → high; scope creep → medium. Standards: hard violation of a documented standard → high; judgement call or baseline smell → low (medium if the reviewer stresses it)
+  - `/code-review` — correctness finding with `CONFIRMED` verdict → high (critical if the failure scenario is data loss, a security hole, or a crash on a common path); `PLAUSIBLE` → medium; cleanup categories (`simplification`, `efficiency`, `reuse`, and similar) → low
+  - `/spec:validate` — Critical Gaps → critical; broken refs / content mismatches → critical; Missing Details → high; overengineering / features-to-cut → medium unless flagged otherwise
+  - anything else — infer from the reviewer's wording; if nothing signals severity, use medium and mark the severity as inferred in the plan
 - **type** — `missing-test`, `bug-fix`, `refactor`, `security`, `perf`, `docs`, `style`, `naming`, `architecture`, `unclear-requirement`, `overengineering`, `other`
 - **location** — file path + line range when available
 - **summary** — one sentence
@@ -102,4 +115,4 @@ After all subagents finish:
 - **Skipped** — item ids + reason (deferred severity, already addressed, user skipped, blocked)
 - **Follow-ups** — anything larger than expected, newly surfaced questions, or deferred MEDIUM/LOW items worth revisiting
 
-End by noting the changes are **uncommitted in the working tree**, ready for re-review (re-run `/code-review`) and then commit via `/git:commit` or `/ship`.
+End by noting the changes are **uncommitted in the working tree**, ready for re-review (re-run the same review) and then commit via `/git:commit` or `/ship`.

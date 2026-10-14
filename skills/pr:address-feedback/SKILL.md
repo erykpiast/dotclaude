@@ -25,7 +25,7 @@ Run in parallel:
 
 If no open PR exists for this branch, stop and tell the user:
 
-> No open PR found for `<branch>`. Push the branch and open a PR first, or use `/review:address-feedback` to act on `/code-review` or `/spec:validate` output in this conversation.
+> No open PR found for `<branch>`. Push the branch and open a PR first, or use `/review:address-feedback` to act on review output in this conversation (for example `/standards-spec-review`, `/code-review`, or `/spec:validate`).
 
 Do not auto-open a PR.
 
