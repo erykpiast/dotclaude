@@ -15,7 +15,8 @@ On top of that I have:
   <img width="1510" height="278" alt="CleanShot 2026-03-10 at 18 00 26@2x" src="https://github.com/user-attachments/assets/60a9c14f-517d-49e6-8df6-0c128d7960e0" />
 - **`hooks/`** — SessionStart hook that surfaces project memory, and a Stop hook that reminds to run `/reflect` after substantive work.
 - **`skills/ship/`** — Custom skill that guides branch naming, commit messages, and PR creation through a structured interactive workflow.
-- **`CLAUDE.md`** — Global instructions. Includes a writing-style section that requires [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/): simple words, short sentences, no metaphors, no filler. This replaces the former `skills/no-fluff/` mode, which was inspired by [caveman](https://github.com/JuliusBrussee/caveman) and was loaded by a SessionStart hook.
+- **`AGENTS.md`** — Global instructions, shared with Codex through `~/.codex/AGENTS.md`. Includes a writing-style section that requires [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/): simple words, short sentences, no metaphors, no filler. This replaces the former `skills/no-fluff/` mode, which was inspired by [caveman](https://github.com/JuliusBrussee/caveman) and was loaded by a SessionStart hook.
+- **`CLAUDE.md`** — Imports `AGENTS.md` with `@AGENTS.md`, then adds instructions that apply only to Claude Code. Claude Code reads `AGENTS.md` only as a project file, so the user-level `CLAUDE.md` must stay.
 
 The general configuration:
 
@@ -31,7 +32,7 @@ Three commands for managing per-project persistent memory:
 | `/recall <query>` | Search project memory (no query = list all) |
 | `/reflect` | Review the session for insights, confirm each before saving |
 
-Memory is stored at `.claude/memory/` inside each project. Each project decides independently whether to commit or gitignore its memory directory. Cross-project knowledge that applies everywhere should be graduated to `CLAUDE.md` or `.claude/rules/`.
+Memory is stored at `.claude/memory/` inside each project. Each project decides independently whether to commit or gitignore its memory directory. Cross-project knowledge that applies everywhere should be graduated to `AGENTS.md` or `.claude/rules/`.
 
 ### Memory entry format
 
