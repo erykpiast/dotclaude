@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TITLE</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #111;
+    --surface: #1a1a1a;
+    --text: #e6e6e6;
+    --muted: #9a9a9a;
+    --line: #555;
+    --accent: #4c8dff;
+    --add: #3fb950;
+    --remove: #f85149;
+    --warn: #d29922;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.55 var(--sans);
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 48px 32px 80px; }
+  h1 { font-size: 28px; font-weight: 600; margin: 0 0 12px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 48px 0 12px; }
+  p, li { max-width: 68ch; }
+  .answer { font-size: 19px; margin: 0 0 32px; }
+  code { font: 14px var(--mono); background: var(--surface); padding: 1px 5px; border-radius: 3px; }
+  a { color: var(--accent); }
+
+  figure { margin: 32px 0; padding: 24px; background: var(--surface); border: 1px solid #2a2a2a; border-radius: 6px; }
+  figcaption { margin-top: 16px; color: var(--muted); font-size: 14px; }
+  figcaption b { color: var(--text); font-weight: 600; }
+  .mermaid, .sketch { display: flex; justify-content: center; }
+  .mermaid svg, .sketch svg { max-width: 100%; height: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #2a2a2a; vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+
+  .tag { font: 12px var(--mono); padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; }
+  .tag.add { color: var(--add); }
+  .tag.remove { color: var(--remove); }
+  .tag.warn { color: var(--warn); }
+
+  .panes-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+  .panes-bar button {
+    font: 14px var(--sans); color: var(--text); background: transparent;
+    border: 1px solid var(--line); border-radius: 4px; padding: 4px 12px; cursor: pointer;
+  }
+  .panes-bar button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .panes-bar button:disabled { opacity: 0.4; cursor: default; }
+  .panes-bar .count { color: var(--muted); font-size: 14px; margin-left: 8px; }
+  .pane-note { margin-top: 12px; }
+
+  .sources { font-size: 14px; color: var(--muted); padding-left: 20px; }
+  .sources code { font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>TITLE</h1>
+  <p class="answer">ONE-SENTENCE ANSWER.</p>
+
+  <!-- Fig. 1: the main figure. Mermaid example. -->
+  <figure>
+    <pre class="mermaid">
+flowchart LR
+  A[Client] -->|sends request| B[API]
+  B -->|reads| C[(Database)]
+  class B focus
+    </pre>
+    <figcaption><b>Fig. 1.</b> CLAIM OF THE FIGURE.</figcaption>
+  </figure>
+
+  <!-- Hand-written SVG sketch example. Use only the CSS variables for colors. -->
+  <figure>
+    <div class="sketch">
+      <svg viewBox="0 0 400 120" width="400" role="img" aria-label="SHORT DESCRIPTION">
+        <rect x="10" y="30" width="140" height="60" rx="4" fill="none" stroke="var(--line)"/>
+        <text x="80" y="65" fill="var(--text)" text-anchor="middle" font-family="var(--sans)" font-size="14">Outer</text>
+        <rect x="250" y="30" width="140" height="60" rx="4" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <text x="320" y="65" fill="var(--text)" text-anchor="middle" font-family="var(--sans)" font-size="14">Inner</text>
+        <line x1="150" y1="60" x2="244" y2="60" stroke="var(--muted)" marker-end="url(#arrow)"/>
+        <text x="200" y="52" fill="var(--muted)" text-anchor="middle" font-family="var(--sans)" font-size="12">calls</text>
+        <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+      </svg>
+    </div>
+    <figcaption><b>Fig. 2.</b> CLAIM OF THE FIGURE.</figcaption>
+  </figure>
+
+  <!-- Before/after toggle: data-panes="tabs". Each pane has data-label. -->
+  <figure>
+    <div data-panes="tabs">
+      <div data-label="Before">
+        <pre class="mermaid">
+flowchart LR
+  A[Handler] -->|calls| B[Old service]
+        </pre>
+      </div>
+      <div data-label="After">
+        <pre class="mermaid">
+flowchart LR
+  A[Handler] -->|calls| C[New service]
+  class C add
+        </pre>
+      </div>
+    </div>
+    <figcaption><b>Fig. 3.</b> CLAIM OF THE FIGURE.</figcaption>
+  </figure>
+
+  <!-- Step-through: data-panes="steps". Each pane is one step. -->
+  <figure>
+    <div data-panes="steps">
+      <div>
+        <pre class="mermaid">
+sequenceDiagram
+  Client->>API: sends request
+        </pre>
+        <p class="pane-note">STEP 1 TEXT.</p>
+      </div>
+      <div>
+        <pre class="mermaid">
+sequenceDiagram
+  Client->>API: sends request
+  API-->>Client: returns 200
+        </pre>
+        <p class="pane-note">STEP 2 TEXT.</p>
+      </div>
+    </div>
+    <figcaption><b>Fig. 4.</b> CLAIM OF THE FIGURE.</figcaption>
+  </figure>
+
+  <h2>Comparison</h2>
+  <table>
+    <tr><th>Option</th><th>Cost</th><th>Status</th></tr>
+    <tr><td>A</td><td>Low</td><td><span class="tag add">kept</span></td></tr>
+    <tr><td>B</td><td>High</td><td><span class="tag remove">removed</span></td></tr>
+  </table>
+
+  <h2>Sources</h2>
+  <ul class="sources">
+    <li><code>src/api/handler.ts:42</code> WHAT THIS SOURCE SHOWS</li>
+  </ul>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: "base",
+    fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--sans"),
+    themeVariables: {
+      darkMode: true,
+      background: "#1a1a1a",
+      primaryColor: "#1a1a1a",
+      primaryTextColor: "#e6e6e6",
+      primaryBorderColor: "#555",
+      lineColor: "#9a9a9a",
+      textColor: "#e6e6e6",
+      edgeLabelBackground: "#1a1a1a",
+      actorBkg: "#1a1a1a",
+      actorBorder: "#555",
+      actorTextColor: "#e6e6e6",
+      signalColor: "#9a9a9a",
+      signalTextColor: "#e6e6e6",
+      noteBkgColor: "#222",
+      noteTextColor: "#e6e6e6",
+      noteBorderColor: "#555",
+      clusterBkg: "#151515",
+      clusterBorder: "#555",
+      fontSize: "14px",
+    },
+  });
+
+  // Mermaid classes, available in every flowchart: focus, add, remove, warn.
+  const classDefs = [
+    "classDef focus stroke:#4c8dff,stroke-width:2px",
+    "classDef add stroke:#3fb950,stroke-width:2px",
+    "classDef remove stroke:#f85149,stroke-width:2px,stroke-dasharray:4 3",
+    "classDef warn stroke:#d29922,stroke-width:2px",
+  ].join("\n");
+  for (const el of document.querySelectorAll("pre.mermaid")) {
+    if (/^\s*(flowchart|graph)\b/.test(el.textContent)) {
+      el.textContent = el.textContent.trimEnd() + "\n" + classDefs + "\n";
+    }
+  }
+
+  // Render all diagrams while every pane is visible, then hide the panes.
+  // Mermaid measures text wrong inside hidden elements.
+  // Open the page with "#all" to keep every pane visible (for screenshots).
+  mermaid.run().finally(() => {
+    if (location.hash === "#all") return;
+    for (const group of document.querySelectorAll("[data-panes]")) setUpPanes(group);
+  });
+
+  function setUpPanes(group) {
+    const panes = [...group.children];
+    const steps = group.dataset.panes === "steps";
+    const bar = document.createElement("div");
+    bar.className = "panes-bar";
+    group.prepend(bar);
+    let current = 0;
+
+    let buttons = [], prev, next, count;
+    if (steps) {
+      prev = button("Previous", () => show(current - 1));
+      next = button("Next", () => show(current + 1));
+      count = document.createElement("span");
+      count.className = "count";
+      bar.append(prev, next, count);
+    } else {
+      buttons = panes.map((pane, i) => button(pane.dataset.label || "Pane " + (i + 1), () => show(i)));
+      bar.append(...buttons);
+    }
+
+    function show(i) {
+      current = Math.max(0, Math.min(panes.length - 1, i));
+      panes.forEach((pane, j) => { pane.hidden = j !== current; });
+      buttons.forEach((b, j) => b.setAttribute("aria-pressed", String(j === current)));
+      if (steps) {
+        prev.disabled = current === 0;
+        next.disabled = current === panes.length - 1;
+        count.textContent = "Step " + (current + 1) + " of " + panes.length;
+      }
+    }
+
+    function button(label, onClick) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.addEventListener("click", onClick);
+      return b;
+    }
+
+    show(0);
+  }
+</script>
+</body>
+</html>

@@ -31,6 +31,7 @@ Explain the hierarchy in post-order — deepest prerequisites first, root last �
 
 - is built only from known concepts and nodes already climbed
 - gives a one-sentence refresher, in passing, of each known concept it leans on — which is also how a mistaken "known" surfaces, since the user recognises when that sentence does not match what they had in mind
+- when the concept depends on structure, sequence, or a mechanism, also paints it — follow the `paint-me` skill, without its "Open a visual?" question, and give the file path in the message
 - ends with a picker: "Got it — next" / "Still fuzzy — explain it differently" / "Give me a concrete example"
 
 "Still fuzzy" means the same node from a different angle, not the same explanation reworded.
