@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Generated output / runtime artifacts (live in /tmp, never committed)
+*.html
+*.log
+*.jsonl
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Personal config (Slack user ID, email)
+morning-brief.env

@@ -1,0 +1,306 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Morning Brief data",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "date",
+    "slack",
+    "linear",
+    "github",
+    "slackPicks"
+  ],
+  "properties": {
+    "date": {
+      "type": "string",
+      "description": "Human-readable date, e.g. 'Thursday, June 4, 2026'."
+    },
+    "generatedAt": {
+      "type": "string",
+      "description": "ISO-8601 timestamp when the brief was generated."
+    },
+    "slack": {
+      "type": "array",
+      "description": "Slack threads needing a response. Empty array if none.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "channel",
+          "from",
+          "summary",
+          "permalink"
+        ],
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel name, e.g. '#eng-web'."
+          },
+          "from": {
+            "type": "string",
+            "description": "Display name of the person who sent the latest message."
+          },
+          "summary": {
+            "type": "string",
+            "description": "One-line summary of what they're asking/saying."
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "ISO-8601 or human-readable time of the latest message."
+          },
+          "permalink": {
+            "type": "string",
+            "description": "URL to the latest message in the thread."
+          }
+        }
+      }
+    },
+    "linear": {
+      "type": "array",
+      "description": "Linear issues assigned to me, In Progress or Todo. Empty array if none.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "title",
+          "status",
+          "url",
+          "flagged"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "e.g. 'ENG-123'."
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "In Progress",
+              "Todo"
+            ]
+          },
+          "priority": {
+            "type": "string",
+            "description": "e.g. 'Urgent', 'High', 'Medium', 'Low', 'No priority'."
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO date or null."
+          },
+          "url": {
+            "type": "string",
+            "description": "linear.app URL."
+          },
+          "flagged": {
+            "type": "boolean",
+            "description": "True if urgent/high priority, overdue, or due today."
+          }
+        }
+      }
+    },
+    "github": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readyToMerge",
+        "awaitingApproval",
+        "needingAttention"
+      ],
+      "properties": {
+        "readyToMerge": {
+          "type": "array",
+          "description": "Output of gh-prs-ready-to-merge.sh, verbatim.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "number",
+              "title",
+              "url",
+              "repository",
+              "mergeable"
+            ],
+            "properties": {
+              "number": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "repository": {
+                "type": "string"
+              },
+              "mergeable": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "awaitingApproval": {
+          "type": "array",
+          "description": "Output of gh-prs-awaiting-approval.sh, verbatim.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "number",
+              "title",
+              "url",
+              "repository",
+              "reviewDecision",
+              "unresolvedThreads"
+            ],
+            "properties": {
+              "number": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "repository": {
+                "type": "string"
+              },
+              "reviewDecision": {
+                "type": "string"
+              },
+              "unresolvedThreads": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "needingAttention": {
+          "type": "array",
+          "description": "Output of gh-prs-needing-attention.sh, verbatim.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "number",
+              "title",
+              "url",
+              "repository",
+              "author",
+              "reasons",
+              "unresponded"
+            ],
+            "properties": {
+              "number": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "repository": {
+                "type": "string"
+              },
+              "author": {
+                "type": "string"
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "unresponded": {
+                "type": "array",
+                "description": "Comments that wait for my answer. Empty when the PR only waits for my review.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "author",
+                    "createdAt",
+                    "url",
+                    "excerpt"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "review-thread",
+                        "comment"
+                      ]
+                    },
+                    "author": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "excerpt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "slackPicks": {
+      "type": "array",
+      "description": "Up to 3 Slack threads I have not replied to or reacted to that are likely useful to me. Empty array if none.",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "channel",
+          "from",
+          "summary",
+          "why",
+          "permalink"
+        ],
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel name, e.g. '#eng-web'."
+          },
+          "from": {
+            "type": "string",
+            "description": "Display name of the person who started the thread."
+          },
+          "summary": {
+            "type": "string",
+            "description": "What the thread says, and its outcome if any."
+          },
+          "why": {
+            "type": "string",
+            "description": "Why it matters to me, linked to my work."
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Time of the message the permalink points to."
+          },
+          "permalink": {
+            "type": "string",
+            "description": "URL to the root message, or to the relevant reply in an older thread."
+          }
+        }
+      }
+    }
+  }
+}
