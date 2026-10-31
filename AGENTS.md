@@ -171,6 +171,16 @@ summary. Keep them.
 4. Read only the first line and the last line. They must tell me what to do next and what
    changed. If they do not, rewrite them.
 
+## Write comments and explanations for a reader
+
+1. State the concrete outcome that a person would see: what breaks, for whom, and where. Do not
+   compress a consequence into a short clause built on a module's own terms or a metaphor, such
+   as "so its anchors would name the wrong file".
+2. Write each sentence so that it makes sense on its own. Name the thing every time, instead of
+   pointing back with "one", "it", "this", "that", "here" or "there".
+3. Use literal verbs (post, accept, show, return), not figurative ones (take, land, hold, name).
+4. Prefer repeating a noun to a short sentence that the reader must decode.
+
 ## Prefer read-only wrappers for `gcloud`
 
 When **reading/inspecting** data from Google Cloud (listing, describing, retrieving, getting config, etc.), use the read-only wrapper script instead of the bare CLI:
