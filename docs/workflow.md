@@ -33,12 +33,35 @@ The short version:
 
 ---
 
-## 3. Ship: `/ship`
+## 3. Validate: `/validate`
+
+`/validate` proves that the branch does what the ticket or spec asks. It runs without questions:
+
+- Reads the acceptance criteria from the `/implement` handoff record, the ticket, the spec, or earlier sessions in the same worktree
+- Classifies the change (UI, API, CLI, data, agent config, shared environment) and picks the validation path
+- Drives a UI in the Orca browser or Playwright, with screenshots and recordings; calls APIs and CLIs and saves the output; reads logs for changes that live only in staging or production
+- Fixes failures that the branch caused, up to three attempts per criterion
+- Guides you step by step only when a criterion has no autonomous path
+
+`/implement` runs it automatically at the end. Both skills write to `$(git rev-parse --absolute-git-dir)/agent-work/`, so a new session in the same worktree can continue:
+
+| File | Content |
+|------|---------|
+| `implement.md` | Ticket, acceptance criteria, what was built |
+| `validation/manifest.json` | Result per criterion, list of artifacts — `/ship` reads it |
+| `validation/report.md` | Human-readable report |
+| `validation/screenshots/`, `recordings/`, `logs/` | Proof of work |
+
+---
+
+## 4. Ship: `/ship`
 
 When the implementation is ready, `/ship` handles the full PR workflow:
 
 - If there's no PR yet: proposes a branch name, drafts a commit message, PR title, and description — then waits for confirmation before executing anything
 - If a PR already exists: drafts a new commit and proposes updates to the PR title and description
+
+The **What** section leads with visuals: `/validate` screenshots and GIFs for UI changes, Mermaid diagrams for flows, `/paint-me` screenshots for structural changes. `/ship` pushes the images to a `pr-assets/<branch>` branch and links them by commit SHA. If the validation result is missing or stale, `/ship` runs `/validate` first.
 
 Always creates **draft PRs**. Commit messages follow conventional commits.
 

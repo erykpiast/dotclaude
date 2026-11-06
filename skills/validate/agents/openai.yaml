@@ -1,0 +1,3 @@
+interface:
+  display_name: "Validate"
+  short_description: "Prove the branch meets its acceptance criteria"
