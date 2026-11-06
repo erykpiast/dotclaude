@@ -524,7 +524,7 @@ After creating STM tasks, perform these checks:
 - **Progress tracking**: 
   - With STM: `stm list --pretty` or `stm list --status pending`
   - With TodoWrite: Monitor task completion in session
-- **Quality checks**: Run `/validate-and-fix` after implementation
+- **Validation**: Run `/validate` after implementation
 
 ## Best Practices
 

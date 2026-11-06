@@ -16,8 +16,19 @@ Run these commands in parallel to understand the full context:
 - `git status` and `git diff` — understand all staged/unstaged/untracked changes
 - `gh pr view --json title,body,url,state 2>/dev/null` — check if a PR already exists for the current branch
 - `git log --oneline main..HEAD` — understand all commits on this branch
+- `WORK="$(git rev-parse --absolute-git-dir)/agent-work"; cat "$WORK/implement.md" "$WORK/validation/manifest.json" 2>/dev/null` — the `/implement` handoff record and the `/validate` result for this worktree, if they exist
 
-Combine with conversation context about what was worked on.
+Combine with conversation context about what was worked on. The handoff record gives the ticket, the spec, and the motivation even when `/implement` ran in a different session.
+
+### Step 1b: Make Sure the Proof of Work Is Current
+
+Decide without asking the user:
+
+- **Manifest exists and `head` equals `git rev-parse HEAD`** → use it.
+- **Manifest exists, but HEAD moved** → run `git diff --stat <manifest head> HEAD`. If the new changes touch only tests, docs, or comments, use the manifest. Otherwise run `/validate` again.
+- **No manifest** → run `/validate` when the branch changes runtime behaviour beyond a tiny change (see Step 6). Skip it for tiny changes and for changes with nothing to observe.
+
+If the verdict is `fail`, stop and report the failed criteria. Do not open a PR for work that does not do what the ticket asks. If the verdict is `partial`, continue, and list each criterion that is not `pass` in the **Testing** section.
 
 ### Step 2: Determine Flow
 
@@ -77,7 +88,7 @@ Set the PR title to exactly match the commit message header (first line). If the
 **Default structure (non-trivial changes)** — three H2 headers:
 
 - **Why** — The motivation for the change. If the reason is not clearly stated in the conversation context, the initial prompt, or a linked spec/ticket, **stop and ask the user** to provide the motivation before continuing. Do not guess or fabricate a "Why".
-- **What** — The net change the branch makes, at branch altitude. For a single new commit this matches the commit message body. With multiple commits, write it independently: per-commit bodies are legitimately granular, and inheriting that granularity here is what turns a description into a changelog.
+- **What** — The net change the branch makes, at branch altitude, **shown before it is told**. Lead with a visual; keep the prose to at most three bullets that connect or caption the visuals. See **Visuals in What** below. With multiple commits, describe the branch independently: per-commit bodies are legitimately granular, and inheriting that granularity here is what turns a description into a changelog.
 - **Testing** — Manual scenarios a reviewer can run to observe the change. Create an H3 header per scenario, with precise steps as checkbox bullets.
 
   Every scenario must pass all three of these gates:
@@ -97,9 +108,45 @@ Set the PR title to exactly match the commit message header (first line). If the
 
   If there is genuinely nothing a human can observe, write the section as a single line — "No runtime behaviour change — covered by CI." — and stop. Do not invent a scenario to fill the section, and do not fall back to running the test suite.
 
+  When a `/validate` manifest exists, end the section with a collapsed report: `<details><summary>Validation: N of M criteria pass</summary>` and a table of criterion, status, and method. Add the manifest's `postDeploy` checks as checkbox bullets under an H3 **After deploy** scenario.
+
+#### Visuals in What
+
+Pick the visual that fits the change. Decide yourself — do not ask the user. They follow up if they want something else.
+
+| Change | Visual |
+| --- | --- |
+| UI | The `/validate` artifacts with `"pr": true`: screenshots and GIFs. When both a before and an after screenshot exist, put them side by side in a two-column table. |
+| A flow, a sequence of calls, or a state machine | An inline ` ```mermaid ` block. GitHub renders it. Use `sequenceDiagram` for calls over time, `flowchart` for decisions, `stateDiagram-v2` for states. |
+| A structural change that one Mermaid diagram cannot show (layers, a before/after of module boundaries) | A `/paint-me` page. Do not open it in the browser. Take a screenshot with the command in its **Check** section and publish the PNG. |
+| API, CLI, or data | A short code block: the request or command and an excerpt of the response or output, from the `/validate` logs. |
+| Tiny change, pure refactor, or nothing to see | No visual. Do not force one. |
+
+Use at most four visuals. Give each a one-line caption that states what it shows.
+
+#### Publishing images
+
+GitHub has no CLI upload for images, so publish them to a `pr-assets/<branch>` branch in the same repo and link them by commit SHA. Collect the files to publish (the manifest's `"pr": true` artifacts and any `/paint-me` screenshots) into a staging directory, then:
+
+```bash
+BRANCH=$(git branch --show-current)
+ASSETS_REF="refs/heads/pr-assets/$BRANCH"
+PARENT=$(git ls-remote origin "$ASSETS_REF" | cut -f1)
+TMP_INDEX=$(mktemp -u)
+GIT_INDEX_FILE="$TMP_INDEX" git --work-tree="$STAGE" add -A -f
+TREE=$(GIT_INDEX_FILE="$TMP_INDEX" git write-tree)
+COMMIT=$(git commit-tree "$TREE" ${PARENT:+-p "$PARENT"} -m "chore: PR assets for $BRANCH")
+rm -f "$TMP_INDEX"
+git push origin "$COMMIT:$ASSETS_REF"
+```
+
+This does not touch the working tree or the current branch. Each push adds a commit on top of the previous one, so image links in older PR revisions keep working. Link each file as `https://github.com/<owner>/<repo>/blob/$COMMIT/<path>?raw=true`. Link a recording's MP4 or WebM below its GIF; GitHub does not play video files from repo links inline.
+
+The assets branch lives in the same repo, so the images have the same access rules as the PR. Push it without asking, before you present the PR description.
+
 **Tiny changes (roughly ≤ ~10 changed lines, single file, single concern)** — collapse the structure:
 
-- Drop the **What** section. The diff already shows what; restating it bloats the description.
+- Drop the **What** section. The diff already shows what; restating it bloats the description. Exception: a tiny UI change keeps one screenshot, placed under **Why**.
 - Use a single **Why** paragraph (2–4 sentences max) that explains the observed problem and the one-line nature of the fix. State the user-visible effect, not the implementation mechanics.
 - Keep **Testing** to one H3 scenario unless the change genuinely has multiple distinct verification paths. Do not add a "verify nothing else regressed" section — that's the default expectation, not a scenario.
 
@@ -113,7 +160,7 @@ Set the PR title to exactly match the commit message header (first line). If the
 
 ### Step 7: Confirm and Execute
 
-Present the proposed branch name (if changing), commit message (if there are uncommitted changes), PR title, and PR description to the user **before** executing any git commands.
+Present the proposed branch name (if changing), commit message (if there are uncommitted changes), PR title, and PR description to the user **before** executing any git commands. The images are already published (see **Publishing images**), so the preview shows them.
 
 Then ask: **"Create draft PR? (Yes / No)"** and wait for an explicit answer. Do not proceed until the user responds.
 
@@ -142,6 +189,7 @@ Fetch the existing PR title and body.
 - If the fresh draft says the same thing as what's already there, leave the body untouched and tell the user so. This is the common outcome for follow-up commits.
 - Preserve the existing **Why** verbatim unless the branch's motivation has actually changed.
 - Preserve existing checkbox state in **Testing** — reviewers tick boxes. Add a scenario only for behaviour that is genuinely new; remove one only if it is now wrong.
+- Replace a visual in **What** only when `/validate` produced new artifacts for a changed criterion, or when the diagram no longer matches the code. Otherwise keep the existing image links.
 - **Updated PR title** — only if the scope of the PR has materially changed.
 
 Report the outcome as either "description unchanged" or a short list of the specific edits. Do not print a full side-by-side rewrite when a few words changed.
